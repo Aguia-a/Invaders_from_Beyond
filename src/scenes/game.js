@@ -36,7 +36,7 @@ export class Game extends Phaser.Scene {
         this.enemyBullets = this.physics.add.group();
 
         this.level = 1;
-        this.enemyDirection = 5;
+        this.enemyDirection = 3; // VELOCIDADE INICIAL
         this.lastFired = 0;
         this.bossLives = 0;
 
@@ -248,6 +248,7 @@ export class Game extends Phaser.Scene {
 
         if (this.enemies.countActive() === 0) {
             this.level++;
+            this.enemyDirection -= 1; //  Aumenta a Velocidade a Cada Nível
             this.levelText.setText('Nível: ' + this.level);
             this.createEnemiesForLevel(this.level);
         }
