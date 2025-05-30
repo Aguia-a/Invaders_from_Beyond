@@ -36,7 +36,7 @@ export class Game extends Phaser.Scene {
         this.enemyBullets = this.physics.add.group();
 
         this.level = 1;
-        this.enemyDirection = 1;
+        this.enemyDirection = 5;
         this.lastFired = 0;
         this.bossLives = 0;
 
