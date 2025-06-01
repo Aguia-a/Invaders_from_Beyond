@@ -4,7 +4,7 @@ export class Game extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('background', 'assets/space2.png');
+        this.load.image('background02', 'assets/purpleStars.png');
         this.load.image('ship1', 'assets/yellow.spaceship.png');
         this.load.image('ship2', 'assets/blue.spaceship.png');
         this.load.image('ship3', 'assets/red.spaceship.png');
@@ -14,19 +14,33 @@ export class Game extends Phaser.Scene {
         this.load.image('heartEmpty', 'assets/player.empty.heart.png');
         this.load.image('bossHeartFull', 'assets/boss.full.heart.png');
         this.load.image('bossHeartEmpty', 'assets/boss.empty.heart.png');
+        this.load.audio('bgSound', 'assets/inGameSong.mp3');
+        this.load.audio('hitSound', 'assets/impactSound01.mp3');
+        this.load.audio('hitSoundEnemy', 'assets/impactSound02.mp3');
 
-        this.load.spritesheet('explosion', 'assets/explosion.png', {
-            frameWidth: 64,
-            frameHeight: 64
+
+
+
+        this.load.spritesheet('explosion', 'assets/explosionEnemy.png', {
+            frameWidth: 128,
+            frameHeight: 128
         });
     }
 
     create(data) {
         const selectedShip = data.selectedShip || 'ship1';
 
-        this.background = this.add.tileSprite(640, 360, 1280, 720, 'background').setDepth(0);
+        const { width, height } = this.scale;
+        this.background02 = this.add.tileSprite(width / 2, height / 2, width, height, 'background02').setDepth(0);
 
         this.player = this.physics.add.sprite(640, 660, selectedShip).setCollideWorldBounds(true).setScale(0.12);
+
+
+        // Sounds
+        this.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
+        this.inGameMusic.play()
+        this.hitSound = this.sound.add("hitSound")
+        this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 })
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shootKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -59,8 +73,8 @@ export class Game extends Phaser.Scene {
 
         this.anims.create({
             key: 'explode',
-            frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 7 }),
-            frameRate: 14,
+            frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 15 }),
+            frameRate: 20,
             hideOnComplete: true
         });
 
@@ -203,7 +217,7 @@ export class Game extends Phaser.Scene {
             this.lastFired = time + 300;
         }
 
-        this.background.tilePositionY -= 2;
+        this.background02.tilePositionY -= 2;
 
         this.enemies.children.iterate(enemy => {
             if (enemy && enemy.y > 660) {
@@ -226,13 +240,17 @@ export class Game extends Phaser.Scene {
 
     destroyEnemy(bullet, enemy) {
         bullet.destroy();
+        this.hitSoundEnemy.play();
 
         if (enemy.getData('isBoss')) {
             this.bossLives--;
             this.updateBossHearts();
             if (this.bossLives <= 0) {
                 enemy.disableBody(true, true);
-                const explosion = this.add.sprite(enemy.x, enemy.y, 'explosion').setScale(2);
+                const explosion = this.add.sprite(enemy.x, enemy.y, 'explosion')
+                    .setScale(0.6)
+                    .setOrigin(0.5)
+                    .setDepth(10);
                 explosion.play('explode');
 
                 // Recompensa: ganha vida só após boss
@@ -242,8 +260,13 @@ export class Game extends Phaser.Scene {
         } else {
             enemy.disableBody(true, true);
             enemy.canShoot = false;
-            const explosion = this.add.sprite(enemy.x, enemy.y, 'explosion').setScale(1);
+
+            const explosion = this.add.sprite(enemy.x, enemy.y, 'explosion')
+                .setScale(0.6)
+                .setOrigin(0.5)
+                .setDepth(10);
             explosion.play('explode');
+            explosion.on('animationcomplete', () => explosion.destroy());
         }
 
         if (this.enemies.countActive() === 0) {
@@ -256,6 +279,7 @@ export class Game extends Phaser.Scene {
 
     hitPlayer(player, bullet) {
         bullet.destroy();
+        this.hitSound.play();
 
         if (this.isInvincible) return;
 
