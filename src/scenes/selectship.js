@@ -55,7 +55,7 @@ export class SelectShip extends Phaser.Scene {
             const box = this.add.image(x, centerY, boxKey).setOrigin(0.5).setScale(isSelected ? 0.35 : 0.3);
             const ship = this.add.image(x, centerY, key)
                 .setOrigin(0.5)
-                .setScale(isSelected ? 0.25 : 0.2)
+                .setScale(isSelected ? 0.15 : 0.1)
                 .setInteractive({ useHandCursor: true });
 
             this.shipBoxes.push({ box, ship });
@@ -116,7 +116,7 @@ export class SelectShip extends Phaser.Scene {
             const isSelected = i === index;
             entry.box.setTexture(isSelected ? 'shipBoxSelected' : 'shipBox');
             entry.box.setScale(isSelected ? 0.35 : 0.3);
-            entry.ship.setScale(isSelected ? 0.25 : 0.2);
+            entry.ship.setScale(isSelected ? 0.15 : 0.10);
         });
         this.selectedShipIndex = index;
     }
