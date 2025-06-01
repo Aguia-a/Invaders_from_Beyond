@@ -18,8 +18,7 @@ export class Game extends Phaser.Scene {
         this.load.audio('hitSound', 'assets/impactSound01.mp3');
         this.load.audio('hitSoundEnemy', 'assets/impactSound02.mp3');
 
-
-
+        this.load.image('enemyAttack', 'assets/simpleAttack.png'); // ← NOVO
 
         this.load.spritesheet('explosion', 'assets/explosionEnemy.png', {
             frameWidth: 128,
@@ -29,18 +28,20 @@ export class Game extends Phaser.Scene {
 
     create(data) {
         const selectedShip = data.selectedShip || 'ship1';
-
         const { width, height } = this.scale;
-        this.background02 = this.add.tileSprite(width / 2, height / 2, width, height, 'background02').setDepth(0);
 
-        this.player = this.physics.add.sprite(640, 660, selectedShip).setCollideWorldBounds(true).setScale(0.12);
+        this.background02 = this.add.tileSprite(0, 0, width, height, 'background02')
+            .setOrigin(0)
+            .setScrollFactor(0)
+            .setAlpha(0.5);
 
+        this.player = this.physics.add.sprite(640, 660, selectedShip).setCollideWorldBounds(true).setScale(0.08);
 
         // Sounds
         this.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
-        this.inGameMusic.play()
-        this.hitSound = this.sound.add("hitSound")
-        this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 })
+        this.inGameMusic.play();
+        this.hitSound = this.sound.add("hitSound");
+        this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 });
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shootKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -50,7 +51,7 @@ export class Game extends Phaser.Scene {
         this.enemyBullets = this.physics.add.group();
 
         this.level = 1;
-        this.enemyDirection = 3; // VELOCIDADE INICIAL
+        this.enemyDirection = 3;
         this.lastFired = 0;
         this.bossLives = 0;
 
@@ -59,13 +60,7 @@ export class Game extends Phaser.Scene {
         this.hearts = [];
 
         this.levelText = this.add.text(1120, 680, 'Nível: 1', { fontSize: '28px', fill: '#fff' });
-
-        this.bossLivesLabel = this.add.text(640, 16, 'BOSS LIVES', {
-            fontSize: '28px',
-            fill: '#ff0000'
-        }).setOrigin(0.5);
         this.bossHearts = [];
-
         this.isInvincible = false;
 
         this.createEnemiesForLevel(this.level);
@@ -87,11 +82,7 @@ export class Game extends Phaser.Scene {
         graphics.generateTexture('bullet', 4, 16);
         graphics.destroy();
 
-        const redGraphics = this.make.graphics({ x: 0, y: 0, add: false });
-        redGraphics.fillStyle(0xff0000, 1);
-        redGraphics.fillRect(0, 0, 4, 16);
-        redGraphics.generateTexture('enemyBullet', 4, 16);
-        redGraphics.destroy();
+        // REMOVIDO: geração do 'enemyBullet' já que não é mais usado
     }
 
     updateHearts() {
@@ -167,7 +158,7 @@ export class Game extends Phaser.Scene {
 
                 for (let i = 0; i < enemiesInRow; i++) {
                     const x = startX + i * 100;
-                    const enemy = this.enemies.create(x, y, 'enemy').setScale(0.1);
+                    const enemy = this.enemies.create(x, y, 'enemy').setScale(0.08);
                     enemy.canShoot = true;
                 }
             }
@@ -175,8 +166,8 @@ export class Game extends Phaser.Scene {
     }
 
     shootBoss(boss, offsetX) {
-        const bullet = this.enemyBullets.create(boss.x + offsetX, boss.y + 50, 'enemyBullet')
-            .setScale(2)
+        const bullet = this.enemyBullets.create(boss.x + offsetX, boss.y + 50, 'enemyAttack') // ← ALTERADO
+            .setScale(0.05)
             .setDepth(1);
         bullet.setVelocityY(300);
     }
@@ -193,10 +184,16 @@ export class Game extends Phaser.Scene {
                 }
 
                 if (!enemy.getData('isBoss') && enemy.canShoot && Phaser.Math.Between(0, 1000) < 1) {
-                    const enemyBullet = this.enemyBullets.create(enemy.x, enemy.y + 20, 'enemyBullet')
-                        .setScale(2)
+                    const bullet = this.enemyBullets.create(enemy.x, enemy.y + 20, 'enemyAttack') // ← ALTERADO
+                        .setScale(0.05)
                         .setDepth(1);
-                    enemyBullet.setVelocityY(200);
+
+                    const dx = this.player.x - enemy.x;
+                    const dy = this.player.y - enemy.y;
+                    const magnitude = Math.sqrt(dx * dx + dy * dy);
+                    const speed = 200;
+
+                    bullet.setVelocity((dx / magnitude) * speed, (dy / magnitude) * speed);
                 }
             }
         });
@@ -217,7 +214,7 @@ export class Game extends Phaser.Scene {
             this.lastFired = time + 300;
         }
 
-        this.background02.tilePositionY -= 2;
+        this.background02.tilePositionY -= 1;
 
         this.enemies.children.iterate(enemy => {
             if (enemy && enemy.y > 660) {
@@ -253,7 +250,6 @@ export class Game extends Phaser.Scene {
                     .setDepth(10);
                 explosion.play('explode');
 
-                // Recompensa: ganha vida só após boss
                 if (this.lives < this.maxLives) this.lives++;
                 this.updateHearts();
             } else return;
@@ -271,14 +267,15 @@ export class Game extends Phaser.Scene {
 
         if (this.enemies.countActive() === 0) {
             this.level++;
-            this.enemyDirection -= 1; //  Aumenta a Velocidade a Cada Nível
+            this.enemyDirection -= 1;
             this.levelText.setText('Nível: ' + this.level);
             this.createEnemiesForLevel(this.level);
         }
     }
 
-    hitPlayer(player, bullet) {
-        bullet.destroy();
+    hitPlayer(player, bulletOrEnemy) {
+        bulletOrEnemy.destroy?.();  // Se for um tiro, destrói. Se for inimigo, ignora.
+
         this.hitSound.play();
 
         if (this.isInvincible) return;
@@ -303,12 +300,11 @@ export class Game extends Phaser.Scene {
             ease: 'Linear',
             duration: 100,
             yoyo: true,
-            repeat: 9
-        });
-
-        this.time.delayedCall(1000, () => {
-            this.isInvincible = false;
-            this.player.setAlpha(1);
+            repeat: 9,
+            onComplete: () => {
+                this.isInvincible = false;
+                this.player.setAlpha(1);
+            }
         });
     }
 }
