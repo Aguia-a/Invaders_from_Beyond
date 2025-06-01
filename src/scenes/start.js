@@ -105,7 +105,7 @@ export class Start extends Phaser.Scene {
             duration: 1000,
             ease: 'Quad.easeInOut',
             onComplete: () => {
-                this.scene.start('SelectShip');
+                this.scene.start('CutsceneOne');
             }
         });
 });
