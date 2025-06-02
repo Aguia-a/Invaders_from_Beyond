@@ -2,6 +2,7 @@ export class Game extends Phaser.Scene {
     constructor() {
         super('Game');
     }
+    // teste primeiro commit
 
     preload() {
         this.load.image('background02', 'assets/purpleStars.png');
