@@ -94,7 +94,7 @@ export class Game extends Phaser.Scene {
     createEnemiesForLevel(level) {
         this.normalEnemies.clear(true, true);
 
-        if (level === 1) {
+        if (level === 5) {
             this.boss = new Boss(this, 640, 100);
 
             // Colisões do boss configuradas no create, ou você pode chamar checkCollisions aqui para garantir
@@ -102,7 +102,7 @@ export class Game extends Phaser.Scene {
         } else {
             let numEnemies;
             const pattern = (level - 1) % 5;
-            if (pattern === 0) numEnemies = 0;
+            if (pattern === 0) numEnemies = 3;
             else if (pattern === 1) numEnemies = 6;
             else if (pattern === 2) numEnemies = 10;
             else numEnemies = 15;
