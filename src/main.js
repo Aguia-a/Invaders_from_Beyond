@@ -10,7 +10,7 @@ const config = {
     width: window.innerWidth,
     height: window.innerHeight,
     backgroundColor: '#000000',
-    pixelArt: false,
+    pixelArt: true,
     scene: [Start, CutsceneOne, SelectShip, Game],
     scale: {
         mode: Phaser.Scale.FIT,
