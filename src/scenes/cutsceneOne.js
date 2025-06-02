@@ -10,15 +10,28 @@ export class CutsceneOne extends Phaser.Scene {
     }
 
     create() {
+        // Obtém a largura e altura da tela
+        const width = this.scale.width;
+        const height = this.scale.height;
+
         // Adiciona o background a cena
-        this.background = this.add.tileSprite(640, 360, 1280, 720, 'bg');
+        this.background = this.add.tileSprite(width / 2, height / 2, width, height, 'bg');
+
         //Adiciona o sprite do capitão a cena
-        const captain = this.add.image(200, 500, 'captain');
+        const captain = this.add.image(width * 0.2, height * 0.75, 'captain');
+        captain.setScale(Math.min(width / 1280, height / 720));
 
         //Armazena a primeira fala do capitão
         const message =
             'Aopa, tudo bom? Bem-vindo à nossa base espacial. ' +
             'Você está pronto para escolher sua nave e começar sua missão?';
+
+        
+        // Cria a bolha de fala de forma responsiva
+        const bubbleWidth = width * 0.6;
+        const bubbleHeight = height * 0.25;
+        const bubbleX = width * 0.35;
+        const bubbleY = height * 0.4;
 
         // Cria a bolha da conversa
         const bubble = this.add.graphics();
@@ -27,15 +40,23 @@ export class CutsceneOne extends Phaser.Scene {
         bubble.fillRoundedRect(340, 300, 800, 200, 20); // Bolha da conversa
         bubble.strokeRoundedRect(340, 300, 800, 200, 20); // Borda da bolha
 
-        // Cria o texto a ser digitado
-        this.messageText = this.add.text(740, 400, '', {
-            font: '40px Courier New',
-            fill: '#000000',
-            align: 'center',
-            wordWrap: { width: 780, useAdvancedWrap: true }
-        }).setOrigin(0.5);
+        // Define padding da bolha
+        const paddingX = -110; // Mais próximo da borda esquerda
+        const paddingY = 10;
+
+        // Cria o texto mais à esquerda dentro da bolha
+        this.messageText = this.add.text(bubbleX + paddingX*1.1, bubbleY + paddingY, '', {
+        font: `${Math.floor(height / 36)}px Courier New`,
+        fill: '#000000',
+        wordWrap: {
+        width: bubbleWidth - paddingX * 1,
+        useAdvancedWrap: true
+        }
+        }).setOrigin(0, 0); // Alinha à esquerda e ao topo
+
 
         // Começa a digitar a mensagem
+        this.messageText.setOrigin(0, 0); // Top-left
         this.currentMessage = message;
         this.currentIndex = 0;
         this.typeNextChar();
@@ -47,18 +68,12 @@ export class CutsceneOne extends Phaser.Scene {
     }
 
     typeNextChar() {
-        if (this.currentIndex < this.currentMessage.length) {
+       if (this.currentIndex < this.currentMessage.length) {
             const currentText = this.currentMessage.substring(0, this.currentIndex + 1);
             this.messageText.setText(currentText);
             this.currentIndex++;
 
-            console.log('Typed:', currentText);
-
-            // Programa o próximo caractere
-            setTimeout(() => this.typeNextChar(), 70); // O timeout a velocidade de digitação
-        } else {
-            // Confirmar se terminou
-            // console.log('Terminou de digitar'); // Apenas para debug - Remover os primeiros "//" para ativar
+            setTimeout(() => this.typeNextChar(), 70);
         }
     }
 
