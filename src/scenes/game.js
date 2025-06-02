@@ -1,4 +1,5 @@
 import Boss from './boss.js';
+import { Player } from './player.js';
 
 export class Game extends Phaser.Scene {
     constructor() {
@@ -29,7 +30,6 @@ export class Game extends Phaser.Scene {
 
         this.damageBossKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H);
 
-
         const selectedShip = data.selectedShip || 'ship1';
         const { width, height } = this.scale;
 
@@ -38,37 +38,26 @@ export class Game extends Phaser.Scene {
             .setScrollFactor(0)
             .setAlpha(0.5);
 
-        this.player = this.physics.add.sprite(640, 660, selectedShip).setCollideWorldBounds(true).setScale(0.08);
+        this.player = new Player(this, 640, 660, selectedShip);
 
         this.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
         this.inGameMusic.play();
         this.hitSound = this.sound.add("hitSound");
         this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 });
 
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.shootKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
         // Grupo dos inimigos normais
         this.normalEnemies = this.physics.add.group();
 
-        this.bullets = this.physics.add.group({ runChildUpdate: true });
         this.enemyBullets = this.physics.add.group();
 
         this.level = 1;
         this.enemyDirection = 3;
-        this.lastFired = 0;
-
-        this.lives = 5;
-        this.maxLives = 5;
-        this.hearts = [];
 
         this.levelText = this.add.text(1120, 680, 'Nível: 1', { fontSize: '28px', fill: '#fff' });
-        this.isInvincible = false;
 
         this.boss = null;
 
         this.createEnemiesForLevel(this.level);
-        this.updateHearts();
 
         this.anims.create({
             key: 'explode',
@@ -77,8 +66,8 @@ export class Game extends Phaser.Scene {
             hideOnComplete: true
         });
 
-        this.physics.add.overlap(this.bullets, this.normalEnemies, this.destroyEnemy, null, this);
-        this.physics.add.overlap(this.player, this.enemyBullets, this.hitPlayer, null, this);
+        this.physics.add.overlap(this.player.bullets, this.normalEnemies, this.destroyEnemy, null, this);
+        this.physics.add.overlap(this.player.sprite, this.enemyBullets, this.hitPlayer, null, this);
 
         const graphics = this.make.graphics({ x: 0, y: 0, add: false });
         graphics.fillStyle(0xffff00, 1);
@@ -87,30 +76,19 @@ export class Game extends Phaser.Scene {
         graphics.destroy();
     }
 
-    updateHearts() {
-        this.hearts.forEach(heart => heart.destroy());
-        this.hearts = [];
-
-        for (let i = 0; i < this.maxLives; i++) {
-            const key = i < this.lives ? 'heartFull' : 'heartEmpty';
-            const heart = this.add.image(20 + i * 40, 700, key).setScale(0.05).setScrollFactor(0);
-            this.hearts.push(heart);
-        }
-    }
-
     createEnemiesForLevel(level) {
         // Limpa inimigos normais
         this.normalEnemies.clear(true, true);
 
-        // Criar boss no nível 5, por exemplo
+        // Criar boss no nível 1, por exemplo
         if (level === 1) {
-        this.boss = new Boss(this, 640, 100);
+            this.boss = new Boss(this, 640, 100);
 
-        this.physics.add.overlap(this.boss, this.bullets, (boss, bullet) => {
-        console.log('Tiro atingiu boss!');
-        bullet.destroy();
-        this.boss.takeDamage(10);  // chama o método direto do seu boss instanciado
-        });
+            this.physics.add.overlap(this.boss, this.player.bullets, (boss, bullet) => {
+                console.log('Tiro atingiu boss!');
+                bullet.destroy();
+                this.boss.takeDamage(10);  // chama o método direto do seu boss instanciado
+            });
         } else {
             // Criar inimigos normais para outros níveis
             let numEnemies;
@@ -154,8 +132,8 @@ export class Game extends Phaser.Scene {
                         .setScale(0.05)
                         .setDepth(1);
 
-                    const dx = this.player.x - enemy.x;
-                    const dy = this.player.y - enemy.y;
+                    const dx = this.player.sprite.x - enemy.x;
+                    const dy = this.player.sprite.y - enemy.y;
                     const magnitude = Math.sqrt(dx * dx + dy * dy);
                     const speed = 200;
 
@@ -169,23 +147,8 @@ export class Game extends Phaser.Scene {
             this.boss.update(time, delta);
         }
 
-        // Movimento do jogador
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-300);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(300);
-        } else {
-            this.player.setVelocityX(0);
-        }
-
-        // Atira
-        if (Phaser.Input.Keyboard.JustDown(this.shootKey) && time > this.lastFired) {
-            const bullet = this.bullets.create(this.player.x, this.player.y - 20, 'bullet')
-                .setScale(2)
-                .setDepth(1);
-            bullet.setVelocityY(-500);
-            this.lastFired = time + 300;
-        }
+        // Atualiza player (movimento + tiro)
+        this.player.update(time);
 
         this.background02.tilePositionY -= 1;
 
@@ -201,7 +164,7 @@ export class Game extends Phaser.Scene {
         });
 
         // Remove balas fora da tela
-        this.bullets.children.each(bullet => {
+        this.player.bullets.children.each(bullet => {
             if (bullet && bullet.y < -50) bullet.destroy();
         }, this);
 
@@ -210,16 +173,16 @@ export class Game extends Phaser.Scene {
         }, this);
 
         if (Phaser.Input.Keyboard.JustDown(this.damageBossKey) && this.boss) {
-        console.log('Tecla H pressionada - Boss vai tomar 10 de dano');
-        this.boss.takeDamage(10);
-    }
+            console.log('Tecla H pressionada - Boss vai tomar 10 de dano');
+            this.boss.takeDamage(10);
+        }
     }
 
     destroyEnemy(bullet, enemy) {
         console.log('[DEBUG] destroyEnemy chamado para', enemy.texture?.key);
         console.log('[DEBUG] É o boss?', enemy === this.boss);
 
-        if (enemy === this.boss) return; // <-- impede que o boss seja tratado como inimigo normal
+        if (enemy === this.boss) return; // impede que o boss seja tratado como inimigo normal
 
         bullet.destroy();
         this.hitSoundEnemy.play();
@@ -242,7 +205,7 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    destroyBoss() {
+     destroyBoss() {
         if (!this.boss) return;
 
         this.hitSoundEnemy.play();
@@ -264,39 +227,17 @@ export class Game extends Phaser.Scene {
         this.createEnemiesForLevel(this.level);
     }
 
-
-    hitPlayer(player, bulletOrEnemy) {
+    hitPlayer(playerSprite, bulletOrEnemy) {
         bulletOrEnemy.destroy?.();
 
-        this.hitSound.play();
+        const isDead = this.player.hit(this.hitSound);
 
-        if (this.isInvincible) return;
-
-        this.lives--;
-        this.updateHearts();
-
-        if (this.lives <= 0) {
+        if (isDead) {
             this.add.text(640, 360, 'GAME OVER', {
                 fontSize: '64px',
                 fill: '#ff0000'
             }).setOrigin(0.5);
             this.scene.pause();
-            return;
         }
-
-        this.isInvincible = true;
-
-        this.tweens.add({
-            targets: this.player,
-            alpha: 0,
-            ease: 'Linear',
-            duration: 100,
-            yoyo: true,
-            repeat: 9,
-            onComplete: () => {
-                this.isInvincible = false;
-                this.player.setAlpha(1);
-            }
-        });
     }
 }
