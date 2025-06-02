@@ -105,18 +105,11 @@ export class Game extends Phaser.Scene {
         // Criar boss no nível 5, por exemplo
         if (level === 1) {
         this.boss = new Boss(this, 640, 100);
-        console.log('boss existe?', this.boss);
-        console.log('Boss active?', this.boss.active);
-        console.log('Boss visible?', this.boss.visible);
 
-        this.physics.add.overlap(this.bullets, this.boss, (bullet, boss) => {
+        this.physics.add.overlap(this.boss, this.bullets, (boss, bullet) => {
         console.log('Tiro atingiu boss!');
-        bullet.disableBody(true, true)
         bullet.destroy();
         this.boss.takeDamage(10);  // chama o método direto do seu boss instanciado
-        console.log('boss existe?', this.boss);
-        console.log('Boss active?', this.boss.active);
-        console.log('Boss visible?', this.boss.visible);
         });
         } else {
             // Criar inimigos normais para outros níveis
