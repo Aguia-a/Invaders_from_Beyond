@@ -42,6 +42,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         console.log(`[Boss] HP: ${this.health}`);
 
         if (this.health <= 0) {
+
             this.scene.destroyBoss();
         }
     }
