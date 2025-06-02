@@ -10,7 +10,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.setCollideWorldBounds(true);
 
         // Propriedades de vida
-        this.maxHealth = 100;
+        this.maxHealth = 10;
         this.health = this.maxHealth;
 
         // Configurações de movimentação
@@ -42,7 +42,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         console.log(`[Boss] HP: ${this.health}`);
 
         if (this.health <= 0) {
-
+            this.health = 0;
             this.scene.destroyBoss();
         }
     }
