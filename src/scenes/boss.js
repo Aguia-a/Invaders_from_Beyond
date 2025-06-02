@@ -188,6 +188,9 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         // Mantém a velocidade constante usando as propriedades definidas no ataque
         proj.body.setVelocity(proj.speedX, proj.speedY);
 
+        // Debug para checar se está sendo mantida
+        console.log(`[DEBUG] Projectile velocity at update: ${proj.body.velocity.x}, ${proj.body.velocity.y}`);
+
         const outOfBounds = proj.x < -50 || proj.x > this.scene.scale.width + 50 ||
                             proj.y < -50 || proj.y > this.scene.scale.height + 50;
 

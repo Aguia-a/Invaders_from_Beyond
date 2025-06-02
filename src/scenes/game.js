@@ -223,9 +223,18 @@ export class Game extends Phaser.Scene {
     }
 
     hitPlayer(playerSprite, bulletOrEnemy) {
-    bulletOrEnemy.destroy?.();
-    this.player.takeDamage(this.hitSound);
-}
+        bulletOrEnemy.destroy?.();
+
+        const isDead = this.player.takeDamage(this.hitSound);
+
+        if (isDead) {
+            this.add.text(640, 360, 'GAME OVER', {
+                fontSize: '64px',
+                fill: '#ff0000'
+            }).setOrigin(0.5);
+            this.scene.pause();
+        }
+    }
 
     checkCollisions() {
         if (this.boss && this.boss.bossProjectiles) {

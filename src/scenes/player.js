@@ -43,16 +43,15 @@
     }
 
     takeDamage(hitSound) {
-        if (this.isInvincible) {console.log("Jogador está invencivel!")}else{;
-        console.log(`Jogador recebeu dano. Vida atual do jogador: ${this.health}`);
-        
+        if (this.isInvincible) return false;
+
         this.health--;
         this.updateHealthIcons();
 
         hitSound.play();
 
         if (this.health <= 0) {
-            this.die() // player morreu
+            return true; // player morreu
         }
 
         this.isInvincible = true;
@@ -71,14 +70,5 @@
         });
 
         return false;
-        }
-    }
-
-    die() {
-    this.scene.add.text(640, 360, 'GAME OVER', {
-        fontSize: '64px',
-        fill: '#ff0000'
-    }).setOrigin(0.5);
-    this.scene.scene.pause();
     }
 }
