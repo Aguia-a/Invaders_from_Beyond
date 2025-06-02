@@ -12,13 +12,10 @@ export class Game extends Phaser.Scene {
         this.load.image('boss', 'assets/boss.spaceship.png');
         this.load.image('heartFull', 'assets/player.full.heart.png');
         this.load.image('heartEmpty', 'assets/player.empty.heart.png');
-        this.load.image('bossHeartFull', 'assets/boss.full.heart.png');
-        this.load.image('bossHeartEmpty', 'assets/boss.empty.heart.png');
         this.load.audio('bgSound', 'assets/inGameSong.mp3');
         this.load.audio('hitSound', 'assets/impactSound01.mp3');
         this.load.audio('hitSoundEnemy', 'assets/impactSound02.mp3');
-
-        this.load.image('enemyAttack', 'assets/simpleAttack.png'); // ← NOVO
+        this.load.image('enemyAttack', 'assets/simpleAttack.png');
 
         this.load.spritesheet('explosion', 'assets/explosionEnemy.png', {
             frameWidth: 128,
@@ -37,7 +34,6 @@ export class Game extends Phaser.Scene {
 
         this.player = this.physics.add.sprite(640, 660, selectedShip).setCollideWorldBounds(true).setScale(0.08);
 
-        // Sounds
         this.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
         this.inGameMusic.play();
         this.hitSound = this.sound.add("hitSound");
@@ -53,14 +49,12 @@ export class Game extends Phaser.Scene {
         this.level = 1;
         this.enemyDirection = 3;
         this.lastFired = 0;
-        this.bossLives = 0;
 
         this.lives = 5;
         this.maxLives = 5;
         this.hearts = [];
 
         this.levelText = this.add.text(1120, 680, 'Nível: 1', { fontSize: '28px', fill: '#fff' });
-        this.bossHearts = [];
         this.isInvincible = false;
 
         this.createEnemiesForLevel(this.level);
@@ -81,8 +75,6 @@ export class Game extends Phaser.Scene {
         graphics.fillRect(0, 0, 4, 16);
         graphics.generateTexture('bullet', 4, 16);
         graphics.destroy();
-
-        // REMOVIDO: geração do 'enemyBullet' já que não é mais usado
     }
 
     updateHearts() {
@@ -96,80 +88,30 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    updateBossHearts() {
-        this.bossHearts.forEach(h => h.destroy());
-        this.bossHearts = [];
-
-        const startX = 640 - ((this.bossLives - 1) * 20);
-        for (let i = 0; i < this.bossMaxLives; i++) {
-            const key = i < this.bossLives ? 'bossHeartFull' : 'bossHeartEmpty';
-            const heart = this.add.image(startX + i * 40, 60, key).setScale(0.05);
-            this.bossHearts.push(heart);
-        }
-    }
-
     createEnemiesForLevel(level) {
         this.enemies.clear(true, true);
-        this.bossHearts.forEach(h => h.destroy());
-        this.bossHearts = [];
 
-        if (level % 5 === 0) {
-            const boss = this.enemies.create(640, 100, 'boss').setScale(0.2);
-            boss.setData('isBoss', true);
-            this.bossLives = 2 + ((level / 5 - 1) * 2);
-            this.bossMaxLives = this.bossLives;
-            this.updateBossHearts();
+        let numEnemies;
+        const pattern = (level - 1) % 5;
+        if (pattern === 0) numEnemies = 3;
+        else if (pattern === 1) numEnemies = 6;
+        else if (pattern === 2) numEnemies = 10;
+        else numEnemies = 15;
 
-            this.time.addEvent({
-                delay: 2000,
-                callback: () => {
-                    if (boss.active) this.shootBoss(boss, -100);
-                },
-                loop: true
-            });
+        const rows = Math.ceil((Math.sqrt(8 * numEnemies + 1) - 1) / 2);
+        const startY = 80;
 
-            this.time.addEvent({
-                delay: 3500,
-                callback: () => {
-                    if (boss.active) this.shootBoss(boss, 100);
-                },
-                loop: true
-            });
+        for (let row = 0; row < rows; row++) {
+            const enemiesInRow = row + 1;
+            const y = startY + (rows - 1 - row) * 80;
+            const startX = 640 - (enemiesInRow - 1) * 50;
 
-        } else {
-            this.bossLives = 0;
-            this.bossHearts.forEach(h => h.destroy());
-            this.bossHearts = [];
-
-            let numEnemies;
-            const pattern = (level - 1) % 5;
-            if (pattern === 0) numEnemies = 3;
-            else if (pattern === 1) numEnemies = 6;
-            else if (pattern === 2) numEnemies = 10;
-            else numEnemies = 15;
-
-            const rows = Math.ceil((Math.sqrt(8 * numEnemies + 1) - 1) / 2);
-            const startY = 80;
-
-            for (let row = 0; row < rows; row++) {
-                const enemiesInRow = row + 1;
-                const y = startY + (rows - 1 - row) * 80;
-                const startX = 640 - (enemiesInRow - 1) * 50;
-
-                for (let i = 0; i < enemiesInRow; i++) {
-                    const x = startX + i * 100;
-                    const enemy = this.enemies.create(x, y, 'enemy').setScale(0.08);
-                    enemy.canShoot = true;
-                }
+            for (let i = 0; i < enemiesInRow; i++) {
+                const x = startX + i * 100;
+                const enemy = this.enemies.create(x, y, 'enemy').setScale(0.08);
+                enemy.canShoot = true;
             }
         }
-    }
-
-    shootBoss(boss, offsetX) {
-        const bullet = this.enemyBullets.create(boss.x + offsetX, boss.y + 50, 'enemyAttack') // ← ALTERADO
-            .setScale(0.05)
-            .setDepth(1);
-        bullet.setVelocityY(300);
     }
 
     update(time) {
@@ -183,8 +125,8 @@ export class Game extends Phaser.Scene {
                     });
                 }
 
-                if (!enemy.getData('isBoss') && enemy.canShoot && Phaser.Math.Between(0, 1000) < 1) {
-                    const bullet = this.enemyBullets.create(enemy.x, enemy.y + 20, 'enemyAttack') // ← ALTERADO
+                if (enemy.canShoot && Phaser.Math.Between(0, 1000) < 1) {
+                    const bullet = this.enemyBullets.create(enemy.x, enemy.y + 20, 'enemyAttack')
                         .setScale(0.05)
                         .setDepth(1);
 
@@ -239,31 +181,15 @@ export class Game extends Phaser.Scene {
         bullet.destroy();
         this.hitSoundEnemy.play();
 
-        if (enemy.getData('isBoss')) {
-            this.bossLives--;
-            this.updateBossHearts();
-            if (this.bossLives <= 0) {
-                enemy.disableBody(true, true);
-                const explosion = this.add.sprite(enemy.x, enemy.y, 'explosion')
-                    .setScale(0.6)
-                    .setOrigin(0.5)
-                    .setDepth(10);
-                explosion.play('explode');
+        enemy.disableBody(true, true);
+        enemy.canShoot = false;
 
-                if (this.lives < this.maxLives) this.lives++;
-                this.updateHearts();
-            } else return;
-        } else {
-            enemy.disableBody(true, true);
-            enemy.canShoot = false;
-
-            const explosion = this.add.sprite(enemy.x, enemy.y, 'explosion')
-                .setScale(0.6)
-                .setOrigin(0.5)
-                .setDepth(10);
-            explosion.play('explode');
-            explosion.on('animationcomplete', () => explosion.destroy());
-        }
+        const explosion = this.add.sprite(enemy.x, enemy.y, 'explosion')
+            .setScale(0.6)
+            .setOrigin(0.5)
+            .setDepth(10);
+        explosion.play('explode');
+        explosion.on('animationcomplete', () => explosion.destroy());
 
         if (this.enemies.countActive() === 0) {
             this.level++;
@@ -274,7 +200,7 @@ export class Game extends Phaser.Scene {
     }
 
     hitPlayer(player, bulletOrEnemy) {
-        bulletOrEnemy.destroy?.();  // Se for um tiro, destrói. Se for inimigo, ignora.
+        bulletOrEnemy.destroy?.();
 
         this.hitSound.play();
 
