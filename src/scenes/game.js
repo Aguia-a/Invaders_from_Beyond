@@ -1,9 +1,13 @@
+import Boss from './boss.js';
+
+
 export class Game extends Phaser.Scene {
     constructor() {
         super('Game');
     }
 
     preload() {
+
         this.load.image('background02', 'assets/purpleStars.png');
         this.load.image('ship1', 'assets/yellow.spaceship.png');
         this.load.image('ship2', 'assets/blue.spaceship.png');
@@ -57,6 +61,8 @@ export class Game extends Phaser.Scene {
         this.levelText = this.add.text(1120, 680, 'Nível: 1', { fontSize: '28px', fill: '#fff' });
         this.isInvincible = false;
 
+        this.boss = null;
+
         this.createEnemiesForLevel(this.level);
         this.updateHearts();
 
@@ -89,11 +95,38 @@ export class Game extends Phaser.Scene {
     }
 
     createEnemiesForLevel(level) {
-        this.enemies.clear(true, true);
+    this.enemies.clear(true, true);
 
+    if (level === 1) {   // É aqui que o boss deve aparecer (pelo que você falou antes)
+        this.boss = new Boss(this, 640, 100);
+        this.add.existing(this.boss);
+        this.physics.add.existing(this.boss);
+
+        // Colisão entre tiros e boss (só aqui, depois de criar o boss!)
+        this.physics.add.overlap(this.bullets, this.boss, (bullet, boss) => {
+            bullet.destroy();
+
+            boss.disableBody(true, true);
+            const explosion = this.add.sprite(boss.x, boss.y, 'explosion')
+                .setScale(0.6)
+                .setOrigin(0.5)
+                .setDepth(10);
+            explosion.play('explode');
+            explosion.on('animationcomplete', () => explosion.destroy());
+
+            this.boss = null;
+            this.level++;
+            this.enemyDirection -= 1;
+            this.levelText.setText('Nível: ' + this.level);
+            this.createEnemiesForLevel(this.level);
+        }, null, this);
+    }
+
+    // Cria inimigos normais só se for outro nível
+    if (level !== 5) {
         let numEnemies;
         const pattern = (level - 1) % 5;
-        if (pattern === 0) numEnemies = 3;
+        if (pattern === 0) numEnemies = 0;
         else if (pattern === 1) numEnemies = 6;
         else if (pattern === 2) numEnemies = 10;
         else numEnemies = 15;
@@ -113,69 +146,77 @@ export class Game extends Phaser.Scene {
             }
         }
     }
+}
 
-    update(time) {
-        this.enemies.children.iterate(enemy => {
-            if (enemy && enemy.active) {
-                enemy.x += this.enemyDirection;
-                if (enemy.x > 1200 || enemy.x < 80) {
-                    this.enemyDirection *= -1;
-                    this.enemies.children.iterate(e => {
-                        if (e && e.active) e.y += 10;
-                    });
-                }
-
-                if (enemy.canShoot && Phaser.Math.Between(0, 1000) < 1) {
-                    const bullet = this.enemyBullets.create(enemy.x, enemy.y + 20, 'enemyAttack')
-                        .setScale(0.05)
-                        .setDepth(1);
-
-                    const dx = this.player.x - enemy.x;
-                    const dy = this.player.y - enemy.y;
-                    const magnitude = Math.sqrt(dx * dx + dy * dy);
-                    const speed = 200;
-
-                    bullet.setVelocity((dx / magnitude) * speed, (dy / magnitude) * speed);
-                }
+    update(time, delta) {
+    // Atualização dos inimigos normais
+    this.enemies.children.iterate(enemy => {
+        if (enemy && enemy.active) {
+            enemy.x += this.enemyDirection;
+            if (enemy.x > 1200 || enemy.x < 80) {
+                this.enemyDirection *= -1;
+                this.enemies.children.iterate(e => {
+                    if (e && e.active) e.y += 10;
+                });
             }
-        });
 
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-300);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(300);
-        } else {
-            this.player.setVelocityX(0);
-        }
+            if (enemy.canShoot && Phaser.Math.Between(0, 1000) < 1) {
+                const bullet = this.enemyBullets.create(enemy.x, enemy.y + 20, 'enemyAttack')
+                    .setScale(0.05)
+                    .setDepth(1);
 
-        if (Phaser.Input.Keyboard.JustDown(this.shootKey) && time > this.lastFired) {
-            const bullet = this.bullets.create(this.player.x, this.player.y - 20, 'bullet')
-                .setScale(2)
-                .setDepth(1);
-            bullet.setVelocityY(-500);
-            this.lastFired = time + 300;
-        }
+                const dx = this.player.x - enemy.x;
+                const dy = this.player.y - enemy.y;
+                const magnitude = Math.sqrt(dx * dx + dy * dy);
+                const speed = 200;
 
-        this.background02.tilePositionY -= 1;
-
-        this.enemies.children.iterate(enemy => {
-            if (enemy && enemy.y > 660) {
-                this.add.text(640, 360, 'GAME OVER', {
-                    fontSize: '64px',
-                    fill: '#ff0000'
-                }).setOrigin(0.5);
-                this.scene.pause();
+                bullet.setVelocity((dx / magnitude) * speed, (dy / magnitude) * speed);
             }
-        });
+        }
+    });
 
-        this.bullets.children.each(bullet => {
-            if (bullet && bullet.y < -50) bullet.destroy();
-        }, this);
-
-        this.enemyBullets.children.each(bullet => {
-            if (bullet && bullet.y > 800) bullet.destroy();
-        }, this);
+    if (this.cursors.left.isDown) {
+        this.player.setVelocityX(-300);
+    } else if (this.cursors.right.isDown) {
+        this.player.setVelocityX(300);
+    } else {
+        this.player.setVelocityX(0);
     }
+
+    if (Phaser.Input.Keyboard.JustDown(this.shootKey) && time > this.lastFired) {
+        const bullet = this.bullets.create(this.player.x, this.player.y - 20, 'bullet')
+            .setScale(2)
+            .setDepth(1);
+        bullet.setVelocityY(-500);
+        this.lastFired = time + 300;
+    }
+
+    this.background02.tilePositionY -= 1;
+
+    this.enemies.children.iterate(enemy => {
+        if (enemy && enemy.y > 660) {
+            this.add.text(640, 360, 'GAME OVER', {
+                fontSize: '64px',
+                fill: '#ff0000'
+            }).setOrigin(0.5);
+            this.scene.pause();
+        }
+    });
+
+    this.bullets.children.each(bullet => {
+        if (bullet && bullet.y < -50) bullet.destroy();
+    }, this);
+
+    this.enemyBullets.children.each(bullet => {
+        if (bullet && bullet.y > 800) bullet.destroy();
+    }, this);
+
+    // Atualização do boss com os parâmetros adequados
+    if (this.boss && this.boss.active) {
+        this.boss.update(time, delta);
+    }
+}
+
 
     destroyEnemy(bullet, enemy) {
         bullet.destroy();
