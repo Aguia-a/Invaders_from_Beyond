@@ -1,10 +1,12 @@
 import Boss from './boss.js';
 import { Player } from './player.js';
 import { FirePlayer } from './fireplayer.js';
+import { openPauseMenu } from './menuscene.js';
+
 
 export class Game extends Phaser.Scene {
     constructor() {
-        super('Game');
+    super({ key: 'Game' });
     }
 
     preload() {
@@ -31,6 +33,11 @@ export class Game extends Phaser.Scene {
     }
 
     create(data) {
+        // ESC → abrir menu
+        this.input.keyboard.on('keydown-ESC', () => {
+        openPauseMenu(this);  // Passa essa cena como contexto
+        });
+
         this.damageBossKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H);
 
         const selectedShip = data.selectedShip || 'ship1';
