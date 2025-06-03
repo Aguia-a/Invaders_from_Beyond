@@ -39,11 +39,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.DefaultAttack2LastUsed = 0;
         this.DefaultAttack2Velocity = 400;
         //CONFIGURAÇÃO DO ATAQUE ESPECIAL DO BOSS FASE 2 / FASE 3
-        this.phase2Special1Cooldown = 5000; // exemplo: 5s
-        this.phase2Special1LastUsed = 0;
-
-        this.phase2Special2Cooldown = 7000; // exemplo: 7s
-        this.phase2Special2LastUsed = 0;
+        this.specialAttackCooldown = 5000;
+        this.lastSpecialAttackUsed = 0;
         //CONFIGURAÇÃO DO ATAQUE ESPECIAL DO BOSS FASE 3
     }
 
@@ -189,20 +186,49 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             const chance = Phaser.Math.Clamp(100 - (horizontalDist / 2.5), 0, 100);
 
             const roll = Phaser.Math.Between(0, 100);
-            console.log('Chance ataque 1:', chance, '| Sorteio:', roll);
+            //console.log('Chance DefaultAttack1:', chance, '| Sorteio:', roll);
 
-            switch (true) {
-                case (roll <= chance):
-                    console.log('🎯 Resultado: Usando DefaultAttack1()');
+            // Sorteio pra ataques especiais
+            const specialRoll = Phaser.Math.Between(0, 100);
+
+            // Verifica se passou o cooldown do special attack
+            const canUseSpecial = (time - (this.lastSpecialAttackUsed ?? 0)) >= (this.specialAttackCooldown ?? 0);
+
+            if (canUseSpecial) {
+                switch (true) {
+                    case (specialRoll < 15):
+                        console.log('Usando specialAttack1');
+                        // this.specialAttack1();
+                        this.SpecialAttack1LastUsed = time;
+                        this.lastSpecialAttackUsed = time;
+                        break;
+
+                    case (specialRoll >= 15 && specialRoll < 30):
+                        console.log('Usando specialAttack2');
+                        // this.specialAttack2();
+                        this.SpecialAttack2LastUsed = time;
+                        this.lastSpecialAttackUsed = time;
+                        break;
+
+                    default:
+                        if (roll <= chance) {
+                            this.DefaultAttack1();
+                            this.DefaultAttack1LastUsed = time;
+                        } else {
+                            this.DefaultAttack2();
+                            this.DefaultAttack2LastUsed = time;
+                        }
+                        break;
+                }
+            } else {
+                console.log(`No cooldown special ainda (canUseSpecial: ${canUseSpecial})\n`);
+                if (roll <= chance) {
                     this.DefaultAttack1();
                     this.DefaultAttack1LastUsed = time;
-                    break;
-
-                default:
-                    console.log('🧨 Resultado: Usando DefaultAttack2()');
+                } else {
                     this.DefaultAttack2();
                     this.DefaultAttack2LastUsed = time;
-                    break;
+                }
             }
         }
     }
@@ -265,35 +291,23 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     DefaultAttack1() {
-    if (!this.scene.player || !this.scene.player.sprite) return;
+        
+        const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
+        DefaultAttack1Object.setScale(0.4);
+        DefaultAttack1Object.damage = 5;
 
-    const bossX = this.x;
-    const bossY = this.y;
-    const playerX = this.scene.player.sprite.x;
-    const playerY = this.scene.player.sprite.y;
+        // Define a velocidade desejada aqui (pode manipular livremente)
+        DefaultAttack1Object.speedX = 0;
+        DefaultAttack1Object.speedY = this.DefaultAttack1Velocity;
 
-    // Calcula distância entre boss e player
-    const dist = Phaser.Math.Distance.Between(bossX, bossY, playerX, playerY);
+        DefaultAttack1Object.body.setAllowGravity(false);
+        DefaultAttack1Object.body.enable = true;
+        DefaultAttack1Object.body.moves = true;
 
-    // Calcula chance de ataque: 100% perto, 0% a 1000px ou mais
-    const phase1Attack1chance = Phaser.Math.Clamp(100 - (dist / 10), 0, 100);
+        // Setar a velocidade inicial também, para não ficar parado antes do update
+        DefaultAttack1Object.body.setVelocity(DefaultAttack1Object.speedX, DefaultAttack1Object.speedY);
 
-    const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
-    DefaultAttack1Object.setScale(0.4);
-    DefaultAttack1Object.damage = 5;
-
-    // Define a velocidade desejada aqui (pode manipular livremente)
-    DefaultAttack1Object.speedX = 0;
-    DefaultAttack1Object.speedY = this.DefaultAttack1Velocity;
-
-    DefaultAttack1Object.body.setAllowGravity(false);
-    DefaultAttack1Object.body.enable = true;
-    DefaultAttack1Object.body.moves = true;
-
-    // Setar a velocidade inicial também, para não ficar parado antes do update
-    DefaultAttack1Object.body.setVelocity(DefaultAttack1Object.speedX, DefaultAttack1Object.speedY);
-
-    this.bossProjectiles.add(DefaultAttack1Object);
+        this.bossProjectiles.add(DefaultAttack1Object);
     }
 
     DefaultAttack2() {
