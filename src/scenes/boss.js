@@ -7,10 +7,15 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         // Grupo único de projéteis do boss
         this.bossProjectiles = this.scene.physics.add.group();
 
-        this.setScale(0.2);
+        this.initBossVariables();
+
+        this.setScale(this.bossScale);
         this.setData('isBoss', true);
         this.setCollideWorldBounds(true);
+    }
 
+    initBossVariables() {
+        // Configurações gerais do boss
         this.maxHealth = 100;
         this.health = this.maxHealth;
 
@@ -30,7 +35,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalBarreira = 50;
         this.verticalMargem = 30;
 
-        //CONFIGURAÇÃO DO ATAQUE DEFAULT DO BOSS    
+        // Configuração do ataque default do boss    
         this.DefaultAttack1Cooldown = 1500;
         this.DefaultAttack1LastUsed = 0;
         this.DefaultAttack1Velocity = 700;
@@ -38,12 +43,19 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.DefaultAttack2Cooldown = 3000;
         this.DefaultAttack2LastUsed = 0;
         this.DefaultAttack2Velocity = 400;
-        //CONFIGURAÇÃO DO ATAQUE ESPECIAL DO BOSS FASE 2 / FASE 3
+
+        // Configuração do ataque especial do boss fase 2 / fase 3
         this.specialAttackCooldown = 5000;
         this.lastSpecialAttackUsed = 0;
-        //CONFIGURAÇÃO DO ATAQUE ESPECIAL DO BOSS FASE 3
-    }
 
+        // Configurações específicas para o clone do specialAttack2
+        this.cloneDuration = 5000;   // em ms (5 segundos)
+        this.cloneAlpha = 1;
+        this.cloneDepth = 5;
+        this.cloneOffsetX = 50;
+        this.bossScale = 0.2;  // escala base do boss
+        this.cloneScale = this.bossScale; // escala do clone (ajuste aqui se quiser)
+    }
     // Função para verificar cooldown
     canUseAttack(cooldown, lastUsed, currentTime) {
         return (currentTime - lastUsed) > cooldown;
@@ -192,7 +204,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                         this.lastSpecialAttackUsed = time;
                         break;
 
-                    case (specialRoll >= 15 && specialRoll < 90):
+                    case (specialRoll >= 15 && specialRoll < 30):
                         console.log('Usando specialAttack2');
                         this.specialAttack2();
                         this.SpecialAttack2LastUsed = time;
@@ -270,7 +282,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     DefaultAttack1() {
 
         const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
-        DefaultAttack1Object.setScale(0.4);
+        DefaultAttack1Object.setScale(0.3);
         DefaultAttack1Object.damage = 5;
 
         // Define a velocidade desejada aqui (pode manipular livremente)
@@ -321,8 +333,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     specialAttack1() {
         const projectileCount = 20;      // Total de projéteis
-        const interval = 200;            // Intervalo entre cada um (ms)
-        const specialAttack1Velocity = 300;
+        const interval = 300;            // Intervalo entre cada um (ms)
+        const specialAttack1Velocity = 400;
         const screenWidth = this.scene.scale.width;
 
         for (let i = 0; i < projectileCount; i++) {
@@ -344,9 +356,89 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 this.bossProjectiles.add(spike);
             });
         }
-
-        console.log('🧷 specialAttack1: Projéteis verticais criados e tratados como projéteis do boss');
     }
+
+    specialAttack2(time) {
+    // Define posição aleatória semelhante à do teleporte
+    const randomX = Phaser.Math.Between(100, 1200);
+    const randomY = Phaser.Math.Between(80, 300);
+
+    const clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
+    clone.setAlpha(0); // Começa invisível para aplicar fade-in
+    clone.setDepth(this.cloneDepth);
+    clone.setImmovable(true);
+    clone.body.setAllowGravity(false);
+    clone.setScale(this.cloneScale);
+
+    // Parâmetros de movimento do clone
+    clone.baseSpeed = this.baseSpeed;
+    clone.direction = this.direction;
+    clone.verticalTargets = this.verticalTargets;
+    clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
+    clone.waveOffset = 0;
+    clone.verticalDirection = this.verticalDirection;
+    clone.verticalBarreira = this.verticalBarreira;
+    clone.verticalMargem = this.verticalMargem;
+
+    // Atualização de movimento do clone
+    clone.updateMovement = () => {
+        const speed = clone.baseSpeed + 1.5;
+        clone.x += clone.direction * speed;
+
+        if (clone.x < 100 || clone.x > 1200) {
+            clone.direction *= -1;
+            clone.targetY = Phaser.Utils.Array.GetRandom(clone.verticalTargets);
+        }
+
+        clone.waveOffset += 0.05;
+        const wave = Math.sin(clone.waveOffset) * 10;
+        let targetYWithWave = clone.y + (clone.targetY - clone.y) * 0.05 + wave * 0.1;
+
+        // Verifica limites verticais
+        let { newY, newDirection } = this.checkVerticalLimit(
+            targetYWithWave,
+            clone.verticalBarreira,
+            clone.verticalMargem,
+            clone.verticalDirection
+        );
+
+        clone.verticalDirection = newDirection;
+        clone.y = newY;
+    };
+
+    // Adiciona o clone à cena para ser atualizado a cada frame
+    const updateCallback = () => {
+        if (clone.active) clone.updateMovement();
+    };
+    this.scene.events.on('update', updateCallback);
+
+    // Efeito de fade-in (aparecer suavemente)
+    this.scene.tweens.add({
+        targets: clone,
+        alpha: this.cloneAlpha,
+        duration: 200,
+        ease: 'Power1'
+    });
+
+    // Agendar desaparecimento com fade-out
+    this.scene.time.delayedCall(this.cloneDuration, () => {
+        this.scene.tweens.add({
+            targets: clone,
+            alpha: 0,
+            duration: 200,
+            ease: 'Power1',
+            onComplete: () => {
+                clone.destroy();
+                this.scene.events.off('update', updateCallback);
+            }
+        });
+    });
+
+    // Teleporta o boss logo após criar o clone
+    this.teleport(time);
+}
+
+
 
     takeDamage(amount) {
         this.health -= amount;
