@@ -30,14 +30,21 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalBarreira = 50;
         this.verticalMargem = 30;
 
-        //CONFIGURAÇÃO DOS ATAQUE DO BOSS        
-        this.phase1AttackCooldown = 1500;
-        this.phase1LastAttackTime = 0;
-        this.Phase1Attack1Velocity = 700;
+        //CONFIGURAÇÃO DO ATAQUE DEFAULT DO BOSS    
+        this.DefaultAttack1Cooldown = 1500;
+        this.DefaultAttack1LastUsed = 0;
+        this.DefaultAttack1Velocity = 700;
 
-        this.phase1Attack2Cooldown = 3000;
-        this.phase1Attack2LastUsed = 0;
-        this.phase1Attack2Velocity = 400;
+        this.DefaultAttack2Cooldown = 3000;
+        this.DefaultAttack2LastUsed = 0;
+        this.DefaultAttack2Velocity = 400;
+        //CONFIGURAÇÃO DO ATAQUE ESPECIAL DO BOSS FASE 2 / FASE 3
+        this.phase2Special1Cooldown = 5000; // exemplo: 5s
+        this.phase2Special1LastUsed = 0;
+
+        this.phase2Special2Cooldown = 7000; // exemplo: 7s
+        this.phase2Special2LastUsed = 0;
+        //CONFIGURAÇÃO DO ATAQUE ESPECIAL DO BOSS FASE 3
     }
 
     // Função para verificar cooldown
@@ -115,11 +122,12 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalDirection = newDirection;
         this.y = newY;
 
+
+        //DISPARO E CHANCE DO DISPARO
         if (
-            this.canUseAttack(this.phase1AttackCooldown, this.phase1LastAttackTime, time) &&
-            this.canUseAttack(this.phase1Attack2Cooldown, this.phase1Attack2LastUsed, time)
+            this.canUseAttack(this.DefaultAttack1Cooldown, this.DefaultAttack1LastUsed, time) &&
+            this.canUseAttack(this.DefaultAttack2Cooldown, this.DefaultAttack2LastUsed, time)
         ) {
-            // Cálculo da chance com base apenas na distância horizontal (X)
             const bossX = this.x;
             const playerX = this.scene.player?.sprite?.x ?? 0;
 
@@ -131,15 +139,15 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
             switch (true) {
                 case (roll <= chance):
-                    console.log('🎯 Resultado: Usando phase1Attack1()');
-                    this.phase1Attack1();
-                    this.phase1LastAttackTime = time;
+                    console.log('🎯 Resultado: Usando DefaultAttack1()');
+                    this.DefaultAttack1();
+                    this.DefaultAttack1LastUsed = time;
                     break;
 
                 default:
-                    console.log('🧨 Resultado: Usando phase1Attack2()');
-                    this.phase1Attack2();
-                    this.phase1Attack2LastUsed = time;
+                    console.log('🧨 Resultado: Usando DefaultAttack2()');
+                    this.DefaultAttack2();
+                    this.DefaultAttack2LastUsed = time;
                     break;
             }
         }
@@ -167,6 +175,36 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         let { newY, newDirection } = this.checkVerticalLimit(targetYWithWave, this.verticalBarreira, this.verticalMargem, this.verticalDirection);
         this.verticalDirection = newDirection;
         this.y = newY;
+
+        //DISPARO E CHANCE DO DISPARO
+
+        if (
+            this.canUseAttack(this.DefaultAttack1Cooldown, this.DefaultAttack1LastUsed, time) &&
+            this.canUseAttack(this.DefaultAttack2Cooldown, this.DefaultAttack2LastUsed, time)
+        ) {
+            const bossX = this.x;
+            const playerX = this.scene.player?.sprite?.x ?? 0;
+
+            const horizontalDist = Math.abs(bossX - playerX);
+            const chance = Phaser.Math.Clamp(100 - (horizontalDist / 2.5), 0, 100);
+
+            const roll = Phaser.Math.Between(0, 100);
+            console.log('Chance ataque 1:', chance, '| Sorteio:', roll);
+
+            switch (true) {
+                case (roll <= chance):
+                    console.log('🎯 Resultado: Usando DefaultAttack1()');
+                    this.DefaultAttack1();
+                    this.DefaultAttack1LastUsed = time;
+                    break;
+
+                default:
+                    console.log('🧨 Resultado: Usando DefaultAttack2()');
+                    this.DefaultAttack2();
+                    this.DefaultAttack2LastUsed = time;
+                    break;
+            }
+        }
     }
 
     fase3(time, delta) {
@@ -206,6 +244,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalDirection = result.newDirection;
         this.y = result.newY;
 
+        //DISPARO E CHANCE DO DISPARO
+
     }
 
     updateBossProjectiles() {
@@ -224,7 +264,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
-    phase1Attack1() {
+    DefaultAttack1() {
     if (!this.scene.player || !this.scene.player.sprite) return;
 
     const bossX = this.x;
@@ -238,25 +278,25 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     // Calcula chance de ataque: 100% perto, 0% a 1000px ou mais
     const phase1Attack1chance = Phaser.Math.Clamp(100 - (dist / 10), 0, 100);
 
-    const phase1Attack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
-    phase1Attack1Object.setScale(0.4);
-    phase1Attack1Object.damage = 5;
+    const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
+    DefaultAttack1Object.setScale(0.4);
+    DefaultAttack1Object.damage = 5;
 
     // Define a velocidade desejada aqui (pode manipular livremente)
-    phase1Attack1Object.speedX = 0;
-    phase1Attack1Object.speedY = this.Phase1Attack1Velocity;
+    DefaultAttack1Object.speedX = 0;
+    DefaultAttack1Object.speedY = this.DefaultAttack1Velocity;
 
-    phase1Attack1Object.body.setAllowGravity(false);
-    phase1Attack1Object.body.enable = true;
-    phase1Attack1Object.body.moves = true;
+    DefaultAttack1Object.body.setAllowGravity(false);
+    DefaultAttack1Object.body.enable = true;
+    DefaultAttack1Object.body.moves = true;
 
     // Setar a velocidade inicial também, para não ficar parado antes do update
-    phase1Attack1Object.body.setVelocity(phase1Attack1Object.speedX, phase1Attack1Object.speedY);
+    DefaultAttack1Object.body.setVelocity(DefaultAttack1Object.speedX, DefaultAttack1Object.speedY);
 
-    this.bossProjectiles.add(phase1Attack1Object);
+    this.bossProjectiles.add(DefaultAttack1Object);
     }
 
-    phase1Attack2() {
+    DefaultAttack2() {
         if (!this.scene.player || !this.scene.player.sprite) return;
 
         const playerX = this.scene.player.sprite.x;
@@ -275,8 +315,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             const normalizedX = dirX / length;
             const normalizedY = dirY / length;
 
-            orb.speedX = normalizedX * this.phase1Attack2Velocity;
-            orb.speedY = normalizedY * this.phase1Attack2Velocity;
+            orb.speedX = normalizedX * this.DefaultAttack2Velocity;
+            orb.speedY = normalizedY * this.DefaultAttack2Velocity;
 
             orb.body.setAllowGravity(false);
             orb.body.enable = true;
