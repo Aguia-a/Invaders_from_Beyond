@@ -30,12 +30,19 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalBarreira = 50;
         this.verticalMargem = 30;
 
-        // Cooldowns dos ataques
+        //CONFIGURAÇÃO DOS ATAQUE DO BOSS        
         this.phase1AttackCooldown = 1500;
         this.phase1LastAttackTime = 0;
+        this.Phase1Attack1Velocity = 700;
 
-        this.phase3Attack1Cooldown = 3000;
-        this.phase3Attack1LastUsed = 0;
+        this.phase1Attack2Cooldown = 3000;
+        this.phase1Attack2LastUsed = 0;
+        this.phase1Attack2Velocity = 400;
+    }
+
+    // Função para verificar cooldown
+    canUseAttack(cooldown, lastUsed, currentTime) {
+        return (currentTime - lastUsed) > cooldown;
     }
 
     update(time, delta) {
@@ -108,10 +115,34 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalDirection = newDirection;
         this.y = newY;
 
-        if (time - this.phase1LastAttackTime > this.phase1AttackCooldown) {
-        this.phase1Attack();
-        this.phase1LastAttackTime = time;
-    }
+        if (
+            this.canUseAttack(this.phase1AttackCooldown, this.phase1LastAttackTime, time) &&
+            this.canUseAttack(this.phase1Attack2Cooldown, this.phase1Attack2LastUsed, time)
+        ) {
+            // Cálculo da chance com base apenas na distância horizontal (X)
+            const bossX = this.x;
+            const playerX = this.scene.player?.sprite?.x ?? 0;
+
+            const horizontalDist = Math.abs(bossX - playerX);
+            const chance = Phaser.Math.Clamp(100 - (horizontalDist / 2.5), 0, 100);
+
+            const roll = Phaser.Math.Between(0, 100);
+            console.log('Chance ataque 1:', chance, '| Sorteio:', roll);
+
+            switch (true) {
+                case (roll <= chance):
+                    console.log('🎯 Resultado: Usando phase1Attack1()');
+                    this.phase1Attack1();
+                    this.phase1LastAttackTime = time;
+                    break;
+
+                default:
+                    console.log('🧨 Resultado: Usando phase1Attack2()');
+                    this.phase1Attack2();
+                    this.phase1Attack2LastUsed = time;
+                    break;
+            }
+        }
     }
 
     fase2(time, delta) {
@@ -175,78 +206,87 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalDirection = result.newDirection;
         this.y = result.newY;
 
-        if (time - this.phase3Attack1LastUsed > this.phase3Attack1Cooldown) {
-            this.phase3Attack1();
-            this.phase3Attack1LastUsed = time;
-        }
     }
 
     updateBossProjectiles() {
-    this.bossProjectiles.children.iterate(proj => {
-        if (!proj || !proj.active) return;
+        this.bossProjectiles.children.iterate(proj => {
+            if (!proj || !proj.active) return;
 
-        // Mantém a velocidade constante usando as propriedades definidas no ataque
-        proj.body.setVelocity(proj.speedX, proj.speedY);
+            // Mantém a velocidade constante usando as propriedades definidas no ataque
+            proj.body.setVelocity(proj.speedX, proj.speedY);
 
-        const outOfBounds = proj.x < -50 || proj.x > this.scene.scale.width + 50 ||
-                            proj.y < -50 || proj.y > this.scene.scale.height + 50;
+            const outOfBounds = proj.x < -50 || proj.x > this.scene.scale.width + 50 ||
+                proj.y < -50 || proj.y > this.scene.scale.height + 50;
 
-        if (outOfBounds) {
-            proj.destroy();
-        }
-    });
-}
+            if (outOfBounds) {
+                proj.destroy();
+            }
+        });
+    }
 
-    phase1Attack() {
-    const projectile = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
-    projectile.setScale(0.1);
-    projectile.damage = 5;
-
-    // Define a velocidade desejada aqui (pode manipular livremente)
-    projectile.speedX = 0;
-    projectile.speedY = 150;
-
-    projectile.body.setAllowGravity(false);
-    projectile.body.enable = true;
-    projectile.body.moves = true;
-
-    // Setar a velocidade inicial também, para não ficar parado antes do update
-    projectile.body.setVelocity(projectile.speedX, projectile.speedY);
-
-    this.bossProjectiles.add(projectile);
-}
-
-phase3Attack1() {
+    phase1Attack1() {
     if (!this.scene.player || !this.scene.player.sprite) return;
 
+    const bossX = this.x;
+    const bossY = this.y;
     const playerX = this.scene.player.sprite.x;
     const playerY = this.scene.player.sprite.y;
-    const offsets = [-20, 0, 20];
 
-    offsets.forEach(offsetX => {
-        const orb = this.scene.physics.add.sprite(this.x + offsetX, this.y, 'orb');
-        orb.setScale(0.05);
-        orb.damage = 10;
+    // Calcula distância entre boss e player
+    const dist = Phaser.Math.Distance.Between(bossX, bossY, playerX, playerY);
 
-        const dirX = playerX - orb.x;
-        const dirY = playerY - orb.y;
-        const length = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+    // Calcula chance de ataque: 100% perto, 0% a 1000px ou mais
+    const phase1Attack1chance = Phaser.Math.Clamp(100 - (dist / 10), 0, 100);
 
-        const normalizedX = dirX / length;
-        const normalizedY = dirY / length;
+    const phase1Attack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
+    phase1Attack1Object.setScale(0.4);
+    phase1Attack1Object.damage = 5;
 
-        orb.speedX = normalizedX * 300;
-        orb.speedY = normalizedY * 300;
+    // Define a velocidade desejada aqui (pode manipular livremente)
+    phase1Attack1Object.speedX = 0;
+    phase1Attack1Object.speedY = this.Phase1Attack1Velocity;
 
-        orb.body.setAllowGravity(false);
-        orb.body.enable = true;
-        orb.body.moves = true;
+    phase1Attack1Object.body.setAllowGravity(false);
+    phase1Attack1Object.body.enable = true;
+    phase1Attack1Object.body.moves = true;
 
-        orb.body.setVelocity(orb.speedX, orb.speedY);
+    // Setar a velocidade inicial também, para não ficar parado antes do update
+    phase1Attack1Object.body.setVelocity(phase1Attack1Object.speedX, phase1Attack1Object.speedY);
 
-        this.bossProjectiles.add(orb);
-    });
-}
+    this.bossProjectiles.add(phase1Attack1Object);
+    }
+
+    phase1Attack2() {
+        if (!this.scene.player || !this.scene.player.sprite) return;
+
+        const playerX = this.scene.player.sprite.x;
+        const playerY = this.scene.player.sprite.y;
+        const offsets = [-120, 0, 120];
+
+        offsets.forEach(offsetX => {
+            const orb = this.scene.physics.add.sprite(this.x + offsetX, this.y, 'orb');
+            orb.setScale(0.05);
+            orb.damage = 10;
+
+            const dirX = playerX - orb.x;
+            const dirY = playerY - orb.y;
+            const length = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
+
+            const normalizedX = dirX / length;
+            const normalizedY = dirY / length;
+
+            orb.speedX = normalizedX * this.phase1Attack2Velocity;
+            orb.speedY = normalizedY * this.phase1Attack2Velocity;
+
+            orb.body.setAllowGravity(false);
+            orb.body.enable = true;
+            orb.body.moves = true;
+
+            orb.body.setVelocity(orb.speedX, orb.speedY);
+
+            this.bossProjectiles.add(orb);
+        });
+    }
 
     takeDamage(amount) {
         this.health -= amount;
