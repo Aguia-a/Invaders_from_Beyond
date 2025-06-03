@@ -28,9 +28,10 @@ export class Game extends Phaser.Scene {
             frameWidth: 128,
             frameHeight: 128
         });
-
+        this.load.image('bossClone', 'assets/boss.spaceship.png');
         this.load.image('bossProjectile', 'assets/bullet.png');
         this.load.image('orb', 'assets/simpleAttack.png');
+        this.load.image('spikeProjectile', 'assets/bullet.png');
     }
 
     create(data) {
@@ -84,13 +85,13 @@ export class Game extends Phaser.Scene {
     createEnemiesForLevel(level) {
         this.normalEnemies.clear(true, true);
 
-        if (level === 5) {
+        if (level === 1) {
             this.boss = new Boss(this, 640, 100);
             this.checkCollisions();
         } else {
             let numEnemies;
             const pattern = (level - 1) % 5;
-            if (pattern === 0) numEnemies = 3;
+            if (pattern === 0) numEnemies = 0;
             else if (pattern === 1) numEnemies = 6;
             else if (pattern === 2) numEnemies = 10;
             else numEnemies = 15;
