@@ -108,14 +108,12 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
         const roll = Phaser.Math.Between(0, 100);
 
-        console.log(`[Boss Attack Roll] Distância: ${horizontalDist.toFixed(1)} | Chance: ${chance.toFixed(1)}% | Sorteio: ${roll}`);
+        //console.log(`[Boss Attack Roll] Distância: ${horizontalDist.toFixed(1)} | Chance: ${chance.toFixed(1)}% | Sorteio: ${roll}`);
 
         if (roll <= chance) {
-            console.log('🎯 Disparo: DefaultAttack1()');
             this.DefaultAttack1();
             this.DefaultAttack1LastUsed = time;
         } else {
-            console.log('🧨 Disparo: DefaultAttack2()');
             this.DefaultAttack2();
             this.DefaultAttack2LastUsed = time;
         }
@@ -141,8 +139,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalDirection = newDirection;
         this.y = newY;
 
-
-        //DISPARO E CHANCE DO DISPARO
+        //DISPARO
         if (
             this.canUseAttack(this.DefaultAttack1Cooldown, this.DefaultAttack1LastUsed, time) &&
             this.canUseAttack(this.DefaultAttack2Cooldown, this.DefaultAttack2LastUsed, time)
@@ -174,21 +171,12 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.verticalDirection = newDirection;
         this.y = newY;
 
-        //DISPARO E CHANCE DO DISPARO
+        //DISPARO
 
         if (
             this.canUseAttack(this.DefaultAttack1Cooldown, this.DefaultAttack1LastUsed, time) &&
             this.canUseAttack(this.DefaultAttack2Cooldown, this.DefaultAttack2LastUsed, time)
         ) {
-            const bossX = this.x;
-            const playerX = this.scene.player?.sprite?.x ?? 0;
-
-            const horizontalDist = Math.abs(bossX - playerX);
-            const chance = Phaser.Math.Clamp(100 - (horizontalDist / 2.5), 0, 100);
-
-            const roll = Phaser.Math.Between(0, 100);
-            //console.log('Chance DefaultAttack1:', chance, '| Sorteio:', roll);
-
             // Sorteio pra ataques especiais
             const specialRoll = Phaser.Math.Between(0, 100);
 
@@ -199,14 +187,14 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 switch (true) {
                     case (specialRoll < 15):
                         console.log('Usando specialAttack1');
-                        // this.specialAttack1();
+                        this.specialAttack1();
                         this.SpecialAttack1LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
 
-                    case (specialRoll >= 15 && specialRoll < 30):
+                    case (specialRoll >= 15 && specialRoll < 90):
                         console.log('Usando specialAttack2');
-                        // this.specialAttack2();
+                        this.specialAttack2();
                         this.SpecialAttack2LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
@@ -329,6 +317,35 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
             this.bossProjectiles.add(orb);
         });
+    }
+
+    specialAttack1() {
+        const projectileCount = 20;      // Total de projéteis
+        const interval = 200;            // Intervalo entre cada um (ms)
+        const specialAttack1Velocity = 300;
+        const screenWidth = this.scene.scale.width;
+
+        for (let i = 0; i < projectileCount; i++) {
+            this.scene.time.delayedCall(i * interval, () => {
+                const x = Phaser.Math.Between(0, screenWidth); // Posição aleatória no topo
+                const y = -32; // Começa fora da tela
+
+                const spike = this.scene.physics.add.sprite(x, y, 'spikeProjectile');
+                spike.setVelocityY(specialAttack1Velocity); // Velocidade de queda vertical
+                spike.body.setAllowGravity(false);
+                spike.setScale(0.2);
+                // ⚠️ Propriedades obrigatórias para tratamento como projétil:
+                spike.damage = 15;                     // Dano que ele causa
+                spike.isBossProjectile = true;         // Identificação como projétil do boss
+                spike.speedX = 0;                      // Movimento apenas vertical
+                spike.speedY = specialAttack1Velocity;
+
+                // Adiciona ao grupo de projéteis
+                this.bossProjectiles.add(spike);
+            });
+        }
+
+        console.log('🧷 specialAttack1: Projéteis verticais criados e tratados como projéteis do boss');
     }
 
     takeDamage(amount) {
