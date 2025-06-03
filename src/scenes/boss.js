@@ -99,6 +99,28 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         return { newY, newDirection };
     }
 
+    handleDefaultAttacks(time) {
+        const bossX = this.x;
+        const playerX = this.scene.player?.sprite?.x ?? 0;
+
+        const horizontalDist = Math.abs(bossX - playerX);
+        const chance = Phaser.Math.Clamp(100 - (horizontalDist / 2.5), 0, 100);
+
+        const roll = Phaser.Math.Between(0, 100);
+
+        console.log(`[Boss Attack Roll] Distância: ${horizontalDist.toFixed(1)} | Chance: ${chance.toFixed(1)}% | Sorteio: ${roll}`);
+
+        if (roll <= chance) {
+            console.log('🎯 Disparo: DefaultAttack1()');
+            this.DefaultAttack1();
+            this.DefaultAttack1LastUsed = time;
+        } else {
+            console.log('🧨 Disparo: DefaultAttack2()');
+            this.DefaultAttack2();
+            this.DefaultAttack2LastUsed = time;
+        }
+    }
+
     fase1(time, delta) {
         if (!this.fase1Iniciada) {
             console.log("O boss entrou na fase 1");
@@ -125,28 +147,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.canUseAttack(this.DefaultAttack1Cooldown, this.DefaultAttack1LastUsed, time) &&
             this.canUseAttack(this.DefaultAttack2Cooldown, this.DefaultAttack2LastUsed, time)
         ) {
-            const bossX = this.x;
-            const playerX = this.scene.player?.sprite?.x ?? 0;
-
-            const horizontalDist = Math.abs(bossX - playerX);
-            const chance = Phaser.Math.Clamp(100 - (horizontalDist / 2.5), 0, 100);
-
-            const roll = Phaser.Math.Between(0, 100);
-            console.log('Chance ataque 1:', chance, '| Sorteio:', roll);
-
-            switch (true) {
-                case (roll <= chance):
-                    console.log('🎯 Resultado: Usando DefaultAttack1()');
-                    this.DefaultAttack1();
-                    this.DefaultAttack1LastUsed = time;
-                    break;
-
-                default:
-                    console.log('🧨 Resultado: Usando DefaultAttack2()');
-                    this.DefaultAttack2();
-                    this.DefaultAttack2LastUsed = time;
-                    break;
-            }
+            this.handleDefaultAttacks(time);
         }
     }
 
@@ -211,24 +212,12 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                         break;
 
                     default:
-                        if (roll <= chance) {
-                            this.DefaultAttack1();
-                            this.DefaultAttack1LastUsed = time;
-                        } else {
-                            this.DefaultAttack2();
-                            this.DefaultAttack2LastUsed = time;
-                        }
+                        this.handleDefaultAttacks(time);
                         break;
                 }
             } else {
-                console.log(`No cooldown special ainda (canUseSpecial: ${canUseSpecial})\n`);
-                if (roll <= chance) {
-                    this.DefaultAttack1();
-                    this.DefaultAttack1LastUsed = time;
-                } else {
-                    this.DefaultAttack2();
-                    this.DefaultAttack2LastUsed = time;
-                }
+                console.log(`[Cooldown] Especial ainda em espera | canUseSpecial: ${canUseSpecial}`);
+                this.handleDefaultAttacks(time);
             }
         }
     }
@@ -291,7 +280,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     DefaultAttack1() {
-        
+
         const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
         DefaultAttack1Object.setScale(0.4);
         DefaultAttack1Object.damage = 5;
