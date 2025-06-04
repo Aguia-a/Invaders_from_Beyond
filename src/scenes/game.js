@@ -32,7 +32,7 @@ export class Game extends Phaser.Scene {
         this.load.image('bossProjectile', 'assets/bullet.png');
         this.load.image('orb', 'assets/simpleAttack.png');
         this.load.image('spikeProjectile', 'assets/bullet.png');
-        this.load.image('wallProjectile', 'assets/bullet.png');
+        this.load.image('wallProjectile', 'assets/wall-projectile.png');
     }
 
     create(data) {

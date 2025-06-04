@@ -230,27 +230,29 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.verticalDirection = 1;
         }
 
-        const speed = this.baseSpeed + 3;
-        this.x += this.direction * speed;
+        if (!this.isDashing) {
+            const speed = this.baseSpeed + 3;
+            this.x += this.direction * speed;
 
-        if (this.x < 100) {
-            this.x = 100;
-            this.direction *= -1;
-        } else if (this.x > 1200) {
-            this.x = 1200;
-            this.direction *= -1;
+            if (this.x < 100) {
+                this.x = 100;
+                this.direction *= -1;
+            } else if (this.x > 1200) {
+                this.x = 1200;
+                this.direction *= -1;
+            }
+
+            this.waveOffset += 0.05;
+
+            const amplitude = 20;
+            const wave = Math.sin(this.waveOffset) * amplitude;
+
+            let newY = this.y + wave * 0.25;
+
+            let result = this.checkVerticalLimit(newY, this.verticalBarreira, this.verticalMargem, this.verticalDirection);
+            this.verticalDirection = result.newDirection;
+            this.y = result.newY;
         }
-
-        this.waveOffset += 0.05;
-
-        const amplitude = 20;
-        const wave = Math.sin(this.waveOffset) * amplitude;
-
-        let newY = this.y + wave * 0.25;
-
-        let result = this.checkVerticalLimit(newY, this.verticalBarreira, this.verticalMargem, this.verticalDirection);
-        this.verticalDirection = result.newDirection;
-        this.y = result.newY;
 
         //DISPARO E CHANCE DO DISPARO
         if (
@@ -265,21 +267,21 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
             if (canUseSpecial) {
                 switch (true) {
-                    case (specialRoll < 15):
+                    case (specialRoll < 20):
                         console.log('Usando specialAttack1');
                         this.specialAttack1();
                         this.SpecialAttack1LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
 
-                    case (specialRoll >= 15 && specialRoll < 30):
+                    case (specialRoll >= 20 && specialRoll < 40):
                         console.log('Usando specialAttack2');
                         this.specialAttack2(time);
                         this.SpecialAttack2LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
 
-                    case (specialRoll >= 30 && specialRoll < 45):
+                    case (specialRoll >= 40 && specialRoll < 60):
                         console.log('Usando specialAttack3');
                         this.specialAttack3(time);
                         this.SpecialAttack3LastUsed = time;
@@ -382,7 +384,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 spike.setScale(0.2);
                 // ⚠️ Propriedades obrigatórias para tratamento como projétil:
                 spike.damage = 15;                     // Dano que ele causa
-                spike.isBossProjectile = true;         // Identificação como projétil do boss
                 spike.speedX = 0;                      // Movimento apenas vertical
                 spike.speedY = specialAttack1Velocity;
 
@@ -475,14 +476,16 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     specialAttack3(time) {
         const dashCount = 4;
         const dashDuration = 400;
-        const pauseBetweenDashes = 600;
-        const minDistanceX = 250; // Distância mínima entre dashes no eixo X
+        const pauseBetweenDashes = 200;
+        const minDistanceX = 400;
+        const avoidMargin = 200; // Mínima distância das posições anteriores
 
         this.isDashing = true;
         this.setVelocity(0, 0);
         this.scene.tweens.killTweensOf(this);
 
         let dashIndex = 0;
+        const previousPositions = [];
 
         const doDash = () => {
             if (dashIndex >= dashCount) {
@@ -492,9 +495,23 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             }
 
             let newX;
+            let tries = 0;
             do {
                 newX = Phaser.Math.Between(100, 1200);
-            } while (Math.abs(newX - this.x) < minDistanceX); // Garante distância mínima
+                tries++;
+
+                // Rejeita se estiver muito perto de alguma posição anterior
+            } while (
+                (
+                    Math.abs(newX - this.x) < minDistanceX ||
+                    previousPositions.some(prev => Math.abs(newX - prev) < avoidMargin)
+                ) && tries < 30
+            );
+
+            previousPositions.push(newX);
+            if (previousPositions.length > 3) {
+                previousPositions.shift();
+            }
 
             this.scene.tweens.add({
                 targets: this,
@@ -505,8 +522,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                     console.log(`💨 Dash ${dashIndex + 1} para x=${newX}`);
                 },
                 onComplete: () => {
-                    this.launchWallProjectile(); // Lança projétil após o dash
-
+                    this.launchWallProjectile();
                     dashIndex++;
                     this.scene.time.delayedCall(pauseBetweenDashes, doDash);
                 }
@@ -548,23 +564,33 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
     launchWallProjectile() {
         const projectile = this.scene.physics.add.sprite(this.x, this.y + 50, 'wallProjectile');
-        projectile.setVelocityY(300); // Velocidade de descida
         projectile.setImmovable(true);
         projectile.setDepth(1);
-        projectile.speedY = 200;
+        projectile.setScale(1, 1); // Escala inicial
+        projectile.setOrigin(0.5, 0); // Cresce para baixo
+        projectile.speedX = 0;
+        projectile.speedY = 0;
 
+        const screenBottom = this.scene.scale.height;
+        const distanceToBottom = screenBottom - projectile.y;
+        const originalHeight = projectile.height;
 
-        // Quando atingir a parte inferior da tela
-        const checkInterval = this.scene.time.addEvent({
+        const maxScaleY = distanceToBottom / originalHeight; // Escala necessária para atingir o fundo
+
+        let growth = 1;
+
+        // Crescimento simulando descida
+        const growthInterval = this.scene.time.addEvent({
             delay: 50,
             callback: () => {
-                if (projectile.y >= this.scene.scale.height - projectile.height / 2) {
-                    projectile.setVelocityY(0); // Para de se mover
-                    projectile.speedY = 0;
-                    checkInterval.remove(); // Remove o loop de checagem
+                if (growth < maxScaleY) {
+                    growth += 0.1;
+                    if (growth > maxScaleY) growth = maxScaleY; // Evita ultrapassar
+                    projectile.setScale(1, growth);
+                } else {
+                    growthInterval.remove();
 
-                    // Após 2 segundos, destrói o projétil
-                    this.scene.time.delayedCall(10000, () => {
+                    this.scene.time.delayedCall(1500, () => {
                         projectile.destroy();
                         console.log('🧱 Projétil parede removido');
                     });
@@ -573,7 +599,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             callbackScope: this,
             loop: true
         });
-        projectile.speedX = 0;
+
         this.bossProjectiles.add(projectile);
     }
+
 }
