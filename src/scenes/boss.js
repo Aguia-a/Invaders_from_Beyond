@@ -204,7 +204,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                         this.lastSpecialAttackUsed = time;
                         break;
 
-                    case (specialRoll >= 15 && specialRoll < 30):
+                    case (specialRoll >= 15 && specialRoll < 50):
                         console.log('Usando specialAttack2');
                         this.specialAttack2();
                         this.SpecialAttack2LastUsed = time;
@@ -241,13 +241,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.direction *= -1;
         }
 
-        if (time - this.lastTeleport > this.teleportCooldown) {
-            if (Phaser.Math.Between(0, 100) < 30) {
-                this.teleport(time);
-            }
-            this.lastTeleport = time;
-        }
-
         this.waveOffset += 0.05;
 
         const amplitude = 20;
@@ -260,7 +253,48 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.y = result.newY;
 
         //DISPARO E CHANCE DO DISPARO
+        if (
+            this.canUseAttack(this.DefaultAttack1Cooldown, this.DefaultAttack1LastUsed, time) &&
+            this.canUseAttack(this.DefaultAttack2Cooldown, this.DefaultAttack2LastUsed, time)
+        ) {
+            // Sorteio pra ataques especiais
+            const specialRoll = Phaser.Math.Between(0, 100);
 
+            // Verifica se passou o cooldown do special attack
+            const canUseSpecial = (time - (this.lastSpecialAttackUsed ?? 0)) >= (this.specialAttackCooldown ?? 0);
+
+            if (canUseSpecial) {
+                switch (true) {
+                    case (specialRoll < 15):
+                        console.log('Usando specialAttack1');
+                        this.specialAttack1();
+                        this.SpecialAttack1LastUsed = time;
+                        this.lastSpecialAttackUsed = time;
+                        break;
+
+                    case (specialRoll >= 15 && specialRoll < 30):
+                        console.log('Usando specialAttack2');
+                        this.specialAttack2(time);
+                        this.SpecialAttack2LastUsed = time;
+                        this.lastSpecialAttackUsed = time;
+                        break;
+
+                    case (specialRoll >= 30 && specialRoll < 45):
+                        console.log('Usando specialAttack3');
+                        this.specialAttack3(time);
+                        this.SpecialAttack3LastUsed = time;
+                        this.lastSpecialAttackUsed = time;
+                        break;
+
+                    default:
+                        this.handleDefaultAttacks(time);
+                        break;
+                }
+            } else {
+                console.log(`[Cooldown] Especial ainda em espera | canUseSpecial: ${canUseSpecial}`);
+                this.handleDefaultAttacks(time);
+            }
+        }
     }
 
     updateBossProjectiles() {
@@ -359,86 +393,128 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     specialAttack2(time) {
-    // Define posição aleatória semelhante à do teleporte
-    const randomX = Phaser.Math.Between(100, 1200);
-    const randomY = Phaser.Math.Between(80, 300);
+        // Define posição aleatória semelhante à do teleporte
+        const randomX = Phaser.Math.Between(100, 1200);
+        const randomY = Phaser.Math.Between(80, 300);
 
-    const clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
-    clone.setAlpha(0); // Começa invisível para aplicar fade-in
-    clone.setDepth(this.cloneDepth);
-    clone.setImmovable(true);
-    clone.body.setAllowGravity(false);
-    clone.setScale(this.cloneScale);
+        const clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
+        clone.setAlpha(0); // Começa invisível para aplicar fade-in
+        clone.setDepth(this.cloneDepth);
+        clone.setImmovable(true);
+        clone.body.setAllowGravity(false);
+        clone.setScale(this.cloneScale);
 
-    // Parâmetros de movimento do clone
-    clone.baseSpeed = this.baseSpeed;
-    clone.direction = this.direction;
-    clone.verticalTargets = this.verticalTargets;
-    clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
-    clone.waveOffset = 0;
-    clone.verticalDirection = this.verticalDirection;
-    clone.verticalBarreira = this.verticalBarreira;
-    clone.verticalMargem = this.verticalMargem;
+        // Parâmetros de movimento do clone
+        clone.baseSpeed = this.baseSpeed;
+        clone.direction = this.direction;
+        clone.verticalTargets = this.verticalTargets;
+        clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
+        clone.waveOffset = 0;
+        clone.verticalDirection = this.verticalDirection;
+        clone.verticalBarreira = this.verticalBarreira;
+        clone.verticalMargem = this.verticalMargem;
 
-    // Atualização de movimento do clone
-    clone.updateMovement = () => {
-        const speed = clone.baseSpeed + 1.5;
-        clone.x += clone.direction * speed;
+        // Atualização de movimento do clone
+        clone.updateMovement = () => {
+            const speed = clone.baseSpeed + 1.5;
+            clone.x += clone.direction * speed;
 
-        if (clone.x < 100 || clone.x > 1200) {
-            clone.direction *= -1;
-            clone.targetY = Phaser.Utils.Array.GetRandom(clone.verticalTargets);
-        }
+            if (clone.x < 100 || clone.x > 1200) {
+                clone.direction *= -1;
+                clone.targetY = Phaser.Utils.Array.GetRandom(clone.verticalTargets);
+            }
 
-        clone.waveOffset += 0.05;
-        const wave = Math.sin(clone.waveOffset) * 10;
-        let targetYWithWave = clone.y + (clone.targetY - clone.y) * 0.05 + wave * 0.1;
+            clone.waveOffset += 0.05;
+            const wave = Math.sin(clone.waveOffset) * 10;
+            let targetYWithWave = clone.y + (clone.targetY - clone.y) * 0.05 + wave * 0.1;
 
-        // Verifica limites verticais
-        let { newY, newDirection } = this.checkVerticalLimit(
-            targetYWithWave,
-            clone.verticalBarreira,
-            clone.verticalMargem,
-            clone.verticalDirection
-        );
+            // Verifica limites verticais
+            let { newY, newDirection } = this.checkVerticalLimit(
+                targetYWithWave,
+                clone.verticalBarreira,
+                clone.verticalMargem,
+                clone.verticalDirection
+            );
 
-        clone.verticalDirection = newDirection;
-        clone.y = newY;
-    };
+            clone.verticalDirection = newDirection;
+            clone.y = newY;
+        };
 
-    // Adiciona o clone à cena para ser atualizado a cada frame
-    const updateCallback = () => {
-        if (clone.active) clone.updateMovement();
-    };
-    this.scene.events.on('update', updateCallback);
+        // Adiciona o clone à cena para ser atualizado a cada frame
+        const updateCallback = () => {
+            if (clone.active) clone.updateMovement();
+        };
+        this.scene.events.on('update', updateCallback);
 
-    // Efeito de fade-in (aparecer suavemente)
-    this.scene.tweens.add({
-        targets: clone,
-        alpha: this.cloneAlpha,
-        duration: 200,
-        ease: 'Power1'
-    });
-
-    // Agendar desaparecimento com fade-out
-    this.scene.time.delayedCall(this.cloneDuration, () => {
+        // Efeito de fade-in (aparecer suavemente)
         this.scene.tweens.add({
             targets: clone,
-            alpha: 0,
+            alpha: this.cloneAlpha,
             duration: 200,
-            ease: 'Power1',
-            onComplete: () => {
-                clone.destroy();
-                this.scene.events.off('update', updateCallback);
-            }
+            ease: 'Power1'
         });
-    });
 
-    // Teleporta o boss logo após criar o clone
-    this.teleport(time);
-}
+        // Agendar desaparecimento com fade-out
+        this.scene.time.delayedCall(this.cloneDuration, () => {
+            this.scene.tweens.add({
+                targets: clone,
+                alpha: 0,
+                duration: 200,
+                ease: 'Power1',
+                onComplete: () => {
+                    clone.destroy();
+                    this.scene.events.off('update', updateCallback);
+                }
+            });
+        });
 
+        // Teleporta o boss logo após criar o clone
+        this.teleport(time);
+    }
 
+    specialAttack3(time) {
+        const dashCount = 4;
+        const dashDuration = 400;
+        const pauseBetweenDashes = 600;
+        const minDistanceX = 250; // Distância mínima entre dashes no eixo X
+
+        this.isDashing = true;
+        this.setVelocity(0, 0);
+        this.scene.tweens.killTweensOf(this);
+
+        let dashIndex = 0;
+
+        const doDash = () => {
+            if (dashIndex >= dashCount) {
+                this.isDashing = false;
+                this.setVelocity(0, 0);
+                return;
+            }
+
+            let newX;
+            do {
+                newX = Phaser.Math.Between(100, 1200);
+            } while (Math.abs(newX - this.x) < minDistanceX); // Garante distância mínima
+
+            this.scene.tweens.add({
+                targets: this,
+                x: newX,
+                duration: dashDuration,
+                ease: 'Power2',
+                onStart: () => {
+                    console.log(`💨 Dash ${dashIndex + 1} para x=${newX}`);
+                },
+                onComplete: () => {
+                    this.launchWallProjectile(); // Lança projétil após o dash
+
+                    dashIndex++;
+                    this.scene.time.delayedCall(pauseBetweenDashes, doDash);
+                }
+            });
+        };
+
+        doDash();
+    }
 
     takeDamage(amount) {
         this.health -= amount;
@@ -469,5 +545,35 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 });
             }
         });
+    }
+    launchWallProjectile() {
+        const projectile = this.scene.physics.add.sprite(this.x, this.y + 50, 'wallProjectile');
+        projectile.setVelocityY(300); // Velocidade de descida
+        projectile.setImmovable(true);
+        projectile.setDepth(1);
+        projectile.speedY = 200;
+
+
+        // Quando atingir a parte inferior da tela
+        const checkInterval = this.scene.time.addEvent({
+            delay: 50,
+            callback: () => {
+                if (projectile.y >= this.scene.scale.height - projectile.height / 2) {
+                    projectile.setVelocityY(0); // Para de se mover
+                    projectile.speedY = 0;
+                    checkInterval.remove(); // Remove o loop de checagem
+
+                    // Após 2 segundos, destrói o projétil
+                    this.scene.time.delayedCall(10000, () => {
+                        projectile.destroy();
+                        console.log('🧱 Projétil parede removido');
+                    });
+                }
+            },
+            callbackScope: this,
+            loop: true
+        });
+        projectile.speedX = 0;
+        this.bossProjectiles.add(projectile);
     }
 }

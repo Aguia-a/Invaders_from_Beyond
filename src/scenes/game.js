@@ -32,6 +32,7 @@ export class Game extends Phaser.Scene {
         this.load.image('bossProjectile', 'assets/bullet.png');
         this.load.image('orb', 'assets/simpleAttack.png');
         this.load.image('spikeProjectile', 'assets/bullet.png');
+        this.load.image('wallProjectile', 'assets/bullet.png');
     }
 
     create(data) {
@@ -54,8 +55,8 @@ export class Game extends Phaser.Scene {
 
         this.firePlayer = new FirePlayer(this, this.player.sprite);
 
-        this.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
-        this.inGameMusic.play();
+        this.game.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
+        this.game.inGameMusic.play();
 
         this.hitSound = this.sound.add("hitSound");
         this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 });
