@@ -15,8 +15,10 @@ export default class MenuScene extends Phaser.Scene {
     this.load.image('btnAudioOff', 'assets/btnAudioOnOff.png');
     this.load.image('btnRestart', 'assets/btnRestart.png');
     this.load.image('btnTelaInicial', 'assets/btnTelaInicial.png');
+    
   }
 
+  
   create() {
     this.createButtons();
   }
@@ -37,9 +39,8 @@ export default class MenuScene extends Phaser.Scene {
       fontStyle: 'normal',
       align: 'center',
       stroke: '#000000',
-      strokeThickness: 2,
+      strokeThickness: 0,
     }).setOrigin(0.5);
-
     // Sombra para melhor legibilidade
     btnText.setShadow(2, 2, '#000000', 2, true, true);
 
@@ -47,10 +48,10 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   createBtnResume() {
-    const btnWidth = 200;
-    const btnHeight = 80;
+    const btnWidth = 210;
+    const btnHeight = 90;
     const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY - 100;
+    const centerY = this.cameras.main.centerY - 200;
 
     const btn = this.add.image(centerX, centerY, 'btnResume').setInteractive();
     btn.setDisplaySize(btnWidth, btnHeight);
@@ -67,10 +68,10 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   createBtnAudioOff() {
-    const btnWidth = 200;
-    const btnHeight = 80;
+    const btnWidth = 210;
+    const btnHeight = 90;
     const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY + 100;
+    const centerY = this.cameras.main.centerY + 0;
 
     const btn = this.add.image(centerX, centerY, 'btnAudioOff').setInteractive();
     btn.setDisplaySize(btnWidth, btnHeight);
@@ -93,10 +94,10 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   createBtnRestart() {
-    const btnWidth = 200;
-    const btnHeight = 80;
+    const btnWidth = 210;
+    const btnHeight = 90;
     const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY;
+    const centerY = this.cameras.main.centerY - 100;
 
     const btn = this.add.image(centerX, centerY, 'btnRestart').setInteractive();
     btn.setDisplaySize(btnWidth, btnHeight);
@@ -115,10 +116,10 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   createBtnTelaInicial() {
-    const btnWidth = 200;
-    const btnHeight = 80;
+    const btnWidth = 210;
+    const btnHeight = 90;
     const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY + 200;
+    const centerY = this.cameras.main.centerY + 100;
 
     const btn = this.add.image(centerX, centerY, 'btnTelaInicial').setInteractive();
     btn.setDisplaySize(btnWidth, btnHeight);
@@ -128,6 +129,7 @@ export default class MenuScene extends Phaser.Scene {
 
     btn.on('pointerdown', () => {
       console.log('Botão tela inicial clicado');
+      this.game.inGameMusic.stop();
       this.scene.stop('Game');
       this.scene.start('Start');
       this.scene.stop();
