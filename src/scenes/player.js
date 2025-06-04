@@ -5,6 +5,9 @@ export class Player {
             .setCollideWorldBounds(true)
             .setScale(0.08);
 
+        this.sprite.body.setSize(100, 150); // Largura e altura da área de colisão
+        this.sprite.body.setOffset(20, 30); // Deslocamento da hitbox dentro do sprite
+
         this.cursors = scene.input.keyboard.createCursorKeys();
 
         this.health = 5;
@@ -21,8 +24,6 @@ export class Player {
 
     update(time) {
         this.handleNormalMovement();
-
-    // Tiro removido aqui, para ficar só movimento
 }
 
     updateHealthIcons() {
@@ -80,7 +81,6 @@ export class Player {
     }
 
     handleNormalMovement() {
-
         if (this.cursors.left.isDown) {
             this.sprite.setVelocityX(-this.baseSpeed);
         } else if (this.cursors.right.isDown) {
