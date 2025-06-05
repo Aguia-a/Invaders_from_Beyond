@@ -34,6 +34,8 @@ export class Game extends Phaser.Scene {
         this.load.image('orb', 'assets/simpleAttack.png');
         this.load.image('spikeProjectile', 'assets/bullet.png');
         this.load.image('wallProjectile', 'assets/wall-projectile.png');
+
+        this.load.image('flash', 'assets/flash_particle.png');
     }
 
     create(data) {
@@ -88,7 +90,7 @@ export class Game extends Phaser.Scene {
     createEnemiesForLevel(level) {
         this.normalEnemies.clear(true, true);
 
-        if (level === 5) {
+        if (level === 2) {
             this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
             this.checkCollisions();
 
@@ -181,6 +183,8 @@ export class Game extends Phaser.Scene {
 
     destroyBoss() {
         if (!this.boss) return;
+
+        //BossEffects.pararTremor(this.scene);
 
         this.hitSoundEnemy.play();
 

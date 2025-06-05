@@ -4,6 +4,7 @@ import fase1EfeitoMudanca from './bossEffects.js';
 export default class Boss extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'boss');
+        this.scene = scene;
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -21,10 +22,10 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     initBossVariables() {
         // Configurações gerais do boss
-        this.maxHealth = 100;
+        this.maxHealth = 250;
         this.health = this.maxHealth;
 
-        this.baseSpeed = 3;
+        this.baseSpeed = 5;
         this.direction = 1;
 
         this.currentPhase = 1;
@@ -87,9 +88,9 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     updatePhase() {
         const hpPercent = this.health / this.maxHealth;
-        if (hpPercent > 0.75) {
+        if (hpPercent > 0.80) {
             this.currentPhase = 1;
-        } else if (hpPercent > 0.25) {
+        } else if (hpPercent > 0.50) {
             this.currentPhase = 2;
         } else {
             this.currentPhase = 3;
@@ -147,7 +148,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
 
-
         const speed = this.baseSpeed;
         this.x += this.direction * speed;
 
@@ -197,6 +197,11 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         if (!this.fase2Iniciada) {
             console.log("O boss entrou na fase 2");
             this.fase2Iniciada = true;
+            BossEffects.fase2EfeitoMudanca(this.scene, this);
+        }
+
+         if (!this.isFree) {
+            return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
 
         const speed = this.baseSpeed + 1.5;
@@ -261,6 +266,11 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.fase3Iniciada = true;
             this.waveOffset = 0;
             this.verticalDirection = 1;
+            BossEffects.fase3EfeitoMudanca(this.scene, this);
+        }
+
+         if (!this.isFree) {
+            return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
 
         if (!this.isDashing) {
@@ -300,21 +310,21 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
             if (canUseSpecial) {
                 switch (true) {
-                    case (specialRoll < 20):
+                    case (specialRoll < 30):
                         console.log('Usando specialAttack1');
                         this.specialAttack1();
                         this.SpecialAttack1LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
 
-                    case (specialRoll >= 20 && specialRoll < 40):
+                    case (specialRoll >= 30 && specialRoll < 50):
                         console.log('Usando specialAttack2');
                         this.specialAttack2(time);
                         this.SpecialAttack2LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
 
-                    case (specialRoll >= 40 && specialRoll < 60):
+                    case (specialRoll >= 50 && specialRoll < 90):
                         console.log('Usando specialAttack3');
                         this.specialAttack3(time);
                         this.SpecialAttack3LastUsed = time;
