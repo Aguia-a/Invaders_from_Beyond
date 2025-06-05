@@ -3,7 +3,7 @@ import { Player } from './player.js';
 import { FirePlayer } from './fireplayer.js';
 import { openPauseMenu } from './menuscene.js';
 import { EnemyNormal } from './EnemyNormal.js';
-
+import BossHealthBar from './interface.js';
 
 export class Game extends Phaser.Scene {
     constructor() {
@@ -72,6 +72,8 @@ export class Game extends Phaser.Scene {
         this.levelText = this.add.text(1120, 680, 'Nível: 1', { fontSize: '28px', fill: '#fff' });
 
         this.boss = null;
+        this.bossHealthBar = new BossHealthBar(this, 50, 20);  // posição no topo da tela
+
 
         this.createEnemiesForLevel(this.level);
 
@@ -86,13 +88,20 @@ export class Game extends Phaser.Scene {
     createEnemiesForLevel(level) {
         this.normalEnemies.clear(true, true);
 
-        if (level === 1) {
+        if (level === 5) {
             this.boss = new Boss(this, 640, 100);
             this.checkCollisions();
+            this.bossHealthBar = new BossHealthBar(this, 50, 20);  // posição no topo da tela
+            this.bossHealthBar.updateHealth(this.boss.health, this.boss.maxHealth);
+
+            this.boss.on('damaged', (currentHealth) => {
+            this.bossHealthBar.updateHealth(currentHealth, this.boss.maxHealth);
+        });
+
         } else {
             let numEnemies;
             const pattern = (level - 1) % 5;
-            if (pattern === 0) numEnemies = 0;
+            if (pattern === 0) numEnemies = 3;
             else if (pattern === 1) numEnemies = 6;
             else if (pattern === 2) numEnemies = 10;
             else numEnemies = 15;
