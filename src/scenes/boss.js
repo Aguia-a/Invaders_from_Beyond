@@ -316,23 +316,31 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     DefaultAttack1() {
-
         const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
+        const velocity = this.DefaultAttack1Velocity; // salva valor local do velocity
         DefaultAttack1Object.setScale(0.3);
         DefaultAttack1Object.damage = 5;
 
-        // Define a velocidade desejada aqui (pode manipular livremente)
+        // Inicialmente parado
         DefaultAttack1Object.speedX = 0;
-        DefaultAttack1Object.speedY = this.DefaultAttack1Velocity;
+        DefaultAttack1Object.speedY = 0;
 
         DefaultAttack1Object.body.setAllowGravity(false);
         DefaultAttack1Object.body.enable = true;
         DefaultAttack1Object.body.moves = true;
-
-        // Setar a velocidade inicial também, para não ficar parado antes do update
-        DefaultAttack1Object.body.setVelocity(DefaultAttack1Object.speedX, DefaultAttack1Object.speedY);
+        DefaultAttack1Object.body.setVelocity(0, 0); // Começa parado
 
         this.bossProjectiles.add(DefaultAttack1Object);
+
+        // Após um pequeno atraso, começa a cai
+
+        this.scene.time.delayedCall(150, () => {
+            if (DefaultAttack1Object && DefaultAttack1Object.body) {
+                DefaultAttack1Object.speedY = velocity;
+                DefaultAttack1Object.body.setVelocity(0, velocity);
+            }
+        });
+
     }
 
     DefaultAttack2() {
@@ -398,73 +406,81 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         const randomX = Phaser.Math.Between(100, 1200);
         const randomY = Phaser.Math.Between(80, 300);
 
-        const clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
-        clone.setAlpha(0); // Começa invisível para aplicar fade-in
-        clone.setDepth(this.cloneDepth);
-        clone.setImmovable(true);
-        clone.body.setAllowGravity(false);
-        clone.setScale(this.cloneScale);
+        // Cria o clone e configura propriedades
+        this.clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
+        this.clone.setAlpha(0); // Começa invisível para aplicar fade-in
+        this.clone.setDepth(this.cloneDepth);
+        this.clone.setImmovable(true);
+        this.clone.body.setAllowGravity(false);
+        this.clone.setScale(this.cloneScale);
 
         // Parâmetros de movimento do clone
-        clone.baseSpeed = this.baseSpeed;
-        clone.direction = this.direction;
-        clone.verticalTargets = this.verticalTargets;
-        clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
-        clone.waveOffset = 0;
-        clone.verticalDirection = this.verticalDirection;
-        clone.verticalBarreira = this.verticalBarreira;
-        clone.verticalMargem = this.verticalMargem;
+        this.clone.baseSpeed = this.baseSpeed;
+        this.clone.direction = this.direction;
+        this.clone.verticalTargets = this.verticalTargets;
+        this.clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
+        this.clone.waveOffset = 0;
+        this.clone.verticalDirection = this.verticalDirection;
+        this.clone.verticalBarreira = this.verticalBarreira;
+        this.clone.verticalMargem = this.verticalMargem;
 
         // Atualização de movimento do clone
-        clone.updateMovement = () => {
-            const speed = clone.baseSpeed + 1.5;
-            clone.x += clone.direction * speed;
+        this.clone.updateMovement = () => {
+            const speed = this.clone.baseSpeed + 1.5;
+            this.clone.x += this.clone.direction * speed;
 
-            if (clone.x < 100 || clone.x > 1200) {
-                clone.direction *= -1;
-                clone.targetY = Phaser.Utils.Array.GetRandom(clone.verticalTargets);
+            if (this.clone.x < 100 || this.clone.x > 1200) {
+                this.clone.direction *= -1;
+                this.clone.targetY = Phaser.Utils.Array.GetRandom(this.clone.verticalTargets);
             }
 
-            clone.waveOffset += 0.05;
-            const wave = Math.sin(clone.waveOffset) * 10;
-            let targetYWithWave = clone.y + (clone.targetY - clone.y) * 0.05 + wave * 0.1;
+            this.clone.waveOffset += 0.05;
+            const wave = Math.sin(this.clone.waveOffset) * 10;
+            let targetYWithWave = this.clone.y + (this.clone.targetY - this.clone.y) * 0.05 + wave * 0.1;
 
-            // Verifica limites verticais
             let { newY, newDirection } = this.checkVerticalLimit(
                 targetYWithWave,
-                clone.verticalBarreira,
-                clone.verticalMargem,
-                clone.verticalDirection
+                this.clone.verticalBarreira,
+                this.clone.verticalMargem,
+                this.clone.verticalDirection
             );
 
-            clone.verticalDirection = newDirection;
-            clone.y = newY;
+            this.clone.verticalDirection = newDirection;
+            this.clone.y = newY;
         };
 
-        // Adiciona o clone à cena para ser atualizado a cada frame
-        const updateCallback = () => {
-            if (clone.active) clone.updateMovement();
+        // Salva o callback para atualizar o clone
+        this.cloneUpdateCallback = () => {
+            if (this.clone && this.clone.active) {
+                this.clone.updateMovement();
+            }
         };
-        this.scene.events.on('update', updateCallback);
+        this.scene.events.on('update', this.cloneUpdateCallback);
 
-        // Efeito de fade-in (aparecer suavemente)
-        this.scene.tweens.add({
-            targets: clone,
+        // Fade-in do clone
+        this.cloneFadeInTween = this.scene.tweens.add({
+            targets: this.clone,
             alpha: this.cloneAlpha,
             duration: 200,
             ease: 'Power1'
         });
 
-        // Agendar desaparecimento com fade-out
-        this.scene.time.delayedCall(this.cloneDuration, () => {
-            this.scene.tweens.add({
+        // Agendar fade-out e destruição do clone
+        const scene = this.scene;
+        const clone = this.clone;
+        const cloneUpdateCallback = this.cloneUpdateCallback;
+
+        this.cloneDelayedCall = scene.time.delayedCall(this.cloneDuration, () => {
+            this.cloneFadeOutTween = scene.tweens.add({
                 targets: clone,
                 alpha: 0,
                 duration: 200,
                 ease: 'Power1',
                 onComplete: () => {
-                    clone.destroy();
-                    this.scene.events.off('update', updateCallback);
+                    if (clone) {
+                        clone.destroy();
+                    }
+                    scene.events.off('update', cloneUpdateCallback);
                 }
             });
         });
@@ -472,6 +488,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         // Teleporta o boss logo após criar o clone
         this.teleport(time);
     }
+
 
     specialAttack3(time) {
         const dashCount = 4;
@@ -533,10 +550,35 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     takeDamage(amount) {
+        if (this.isInvincible) return;
+
         this.health -= amount;
+        this.health = Phaser.Math.Clamp(this.health, 0, this.maxHealth);
+
         console.log(`[Boss] HP: ${this.health}`);
+
+        this.isInvincible = true;
+
+        // Tween para piscar (ajuste a duração conforme quiser)
+        this.scene.tweens.add({
+            targets: this,
+            alpha: 0,
+            ease: 'Linear',
+            duration: 100,
+            yoyo: true,
+            repeat: 0,
+            onComplete: () => {
+                this.isInvincible = false;
+                this.setAlpha(1);
+            }
+        });
+
+        // Emitir evento para atualizar a barra
+        this.emit('damaged', this.health);
+
         if (this.health <= 0) {
             this.health = 0;
+            this.cleanup();
             this.scene.destroyBoss();
         }
     }
@@ -603,4 +645,30 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.bossProjectiles.add(projectile);
     }
 
+    cleanup() {
+        // Destrói todos os projéteis do boss
+        if (this.bossProjectiles) {
+            this.bossProjectiles.clear(true, true);
+        }
+
+        // Remove o listener update do clone, se existir
+        if (this.cloneUpdateCallback) {
+            this.scene.events.off('update', this.cloneUpdateCallback);
+            this.cloneUpdateCallback = null;
+        }
+
+        // Destroi o clone, se existir
+        if (this.clone) {
+            this.clone.destroy();
+            this.clone = null;
+        }
+
+        // Para todos os tweens associados ao boss
+        this.scene.tweens.killTweensOf(this);
+
+        // Se você tiver timers guardados, limpe eles aqui
+        // Exemplo: if (this.myTimer) { this.myTimer.remove(); this.myTimer = null; }
+
+        // Outras limpezas específicas podem ser adicionadas aqui
+    }
 }
