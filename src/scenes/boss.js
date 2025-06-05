@@ -1,3 +1,6 @@
+import BossEffects from './bossEffects.js';
+import fase1EfeitoMudanca from './bossEffects.js';
+
 export default class Boss extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'boss');
@@ -12,6 +15,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.setScale(this.bossScale);
         this.setData('isBoss', true);
         this.setCollideWorldBounds(true);
+
+        this.isFree = true;
     }
 
     initBossVariables() {
@@ -135,7 +140,13 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         if (!this.fase1Iniciada) {
             console.log("O boss entrou na fase 1");
             this.fase1Iniciada = true;
+            BossEffects.fase1EfeitoMudanca(this.scene, this);
         }
+
+        if (!this.isFree) {
+            return; // se não está livre, não faz nada aqui (nem se move, nem atira)
+        }
+
 
         const speed = this.baseSpeed;
         this.x += this.direction * speed;
@@ -144,10 +155,32 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.direction *= -1;
         }
 
+        // Inicializa valores se ainda não tiverem sido definidos
+        if (this.targetBaseY === undefined) this.targetBaseY = this.y;
+        if (this.currentBaseY === undefined) this.currentBaseY = this.y;
+        if (this.baseYTimer === undefined) this.baseYTimer = 0;
+
+        // Timer para mudar de posição vertical base aleatoriamente a cada 2–4 segundos
+        this.baseYTimer += this.scene.game.loop.delta;
+        if (this.baseYTimer > Phaser.Math.Between(2000, 4000)) {
+            this.targetBaseY = Phaser.Math.Between(100, 400); // Novo alvo vertical
+            this.baseYTimer = 0;
+        }
+
+        // Interpolação suave para nova base Y
+        this.currentBaseY = Phaser.Math.Linear(this.currentBaseY, this.targetBaseY, 0.01);
+
+        // Movimento vertical com onda senoidal
         this.waveOffset += 0.05;
         const wave = Math.sin(this.waveOffset) * 10;
 
-        let { newY, newDirection } = this.checkVerticalLimit(100 + wave, this.verticalBarreira, this.verticalMargem, this.verticalDirection);
+        let { newY, newDirection } = this.checkVerticalLimit(
+            this.currentBaseY + wave,
+            this.verticalBarreira,
+            this.verticalMargem,
+            this.verticalDirection
+        );
+
         this.verticalDirection = newDirection;
         this.y = newY;
 

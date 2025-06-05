@@ -40,7 +40,7 @@ export default class BossInterface {
         }
     }
 
-    playIntro(bossName, bossHealth, bossMaxHealth, onComplete) {
+    playIntro(bossName, duracao, bossHealth, bossMaxHealth, onComplete) {
         const screenWidth = this.scene.scale.width;
         const screenHeight = this.scene.scale.height;
 
@@ -58,7 +58,7 @@ export default class BossInterface {
             align: 'center',
             stroke: '#000000',
             strokeThickness: 0,
-        }).setOrigin(0.5).setAlpha(0);
+        }).setOrigin(0.5).setAlpha(0.1);
 
         // Tween para barra descer
         this.scene.tweens.add({
@@ -74,7 +74,7 @@ export default class BossInterface {
                 this.scene.tweens.add({
                     targets: this.nameText,
                     alpha: 1,
-                    duration: 800,
+                    duration: duracao,
                     yoyo: true,
                     hold: 1500,
                     onComplete: () => {
