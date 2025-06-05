@@ -383,19 +383,21 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
         for (let i = 0; i < projectileCount; i++) {
             this.scene.time.delayedCall(i * interval, () => {
-                const x = Phaser.Math.Between(0, screenWidth); // Posição aleatória no topo
-                const y = -32; // Começa fora da tela
+                // ⚠️ Proteções contra cena destruída ou boss destruído
+                if (!this.scene || !this.scene.sys || !this.scene.sys.isActive()) return;
+                if (!this.active) return;
+
+                const x = Phaser.Math.Between(0, screenWidth);
+                const y = -32;
 
                 const spike = this.scene.physics.add.sprite(x, y, 'spikeProjectile');
-                spike.setVelocityY(specialAttack1Velocity); // Velocidade de queda vertical
+                spike.setVelocityY(specialAttack1Velocity);
                 spike.body.setAllowGravity(false);
                 spike.setScale(0.2);
-                // ⚠️ Propriedades obrigatórias para tratamento como projétil:
-                spike.damage = 15;                     // Dano que ele causa
-                spike.speedX = 0;                      // Movimento apenas vertical
+                spike.damage = 15;
+                spike.speedX = 0;
                 spike.speedY = specialAttack1Velocity;
 
-                // Adiciona ao grupo de projéteis
                 this.bossProjectiles.add(spike);
             });
         }
