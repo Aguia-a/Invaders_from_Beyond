@@ -89,17 +89,8 @@ export class Game extends Phaser.Scene {
         this.normalEnemies.clear(true, true);
 
         if (level === 5) {
-            this.boss = new Boss(this, 640, 100);
+            this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
             this.checkCollisions();
-
-            const screenWidth = this.scale.width;
-            this.BossInterface = new BossInterface(this, screenWidth / 2, 20);
-
-            // Executa a introdução do boss, passando um callback para ativar o boss depois
-            this.BossInterface.playIntro("OVERLORD", this.boss.health, this.boss.maxHealth, () => {
-                // Aqui você ativa o boss (exemplo)
-                this.boss.setActive(true);
-            });
 
             this.boss.on('damaged', (currentHealth) => {
                 this.BossInterface.updateHealth(currentHealth, this.boss.maxHealth);
