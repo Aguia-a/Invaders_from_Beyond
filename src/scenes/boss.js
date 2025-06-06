@@ -16,6 +16,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.setScale(this.bossScale);
         this.setData('isBoss', true);
         this.setCollideWorldBounds(true);
+    }
 
         this.isFree = true;
     }
@@ -242,7 +243,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                         this.lastSpecialAttackUsed = time;
                         break;
 
-                    case (specialRoll >= 15 && specialRoll < 50):
+                    case (specialRoll >= 15 && specialRoll < 30):
                         console.log('Usando specialAttack2');
                         this.specialAttack2();
                         this.SpecialAttack2LastUsed = time;
@@ -359,31 +360,29 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     DefaultAttack1() {
+
         const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
-        const velocity = this.DefaultAttack1Velocity; // salva valor local do velocity
-        DefaultAttack1Object.setScale(0.3);
+        DefaultAttack1Object.setOrigin(0.5, 0.5);
+        DefaultAttack1Object.setScale(0.2);
+        DefaultAttack1Object.play('bossProjectileAnim')
         DefaultAttack1Object.damage = 5;
 
-        // Inicialmente parado
+        DefaultAttack1Object.on('animationupdate', (animation, frame) => {
+            console.log('Frame atual:', frame.index);
+        });
+
+        // Define a velocidade desejada aqui (pode manipular livremente)
         DefaultAttack1Object.speedX = 0;
-        DefaultAttack1Object.speedY = 0;
+        DefaultAttack1Object.speedY = this.DefaultAttack1Velocity;
 
         DefaultAttack1Object.body.setAllowGravity(false);
         DefaultAttack1Object.body.enable = true;
         DefaultAttack1Object.body.moves = true;
-        DefaultAttack1Object.body.setVelocity(0, 0); // Começa parado
+
+        // Setar a velocidade inicial também, para não ficar parado antes do update
+        DefaultAttack1Object.body.setVelocity(DefaultAttack1Object.speedX, DefaultAttack1Object.speedY);
 
         this.bossProjectiles.add(DefaultAttack1Object);
-
-        // Após um pequeno atraso, começa a cai
-
-        this.scene.time.delayedCall(150, () => {
-            if (DefaultAttack1Object && DefaultAttack1Object.body) {
-                DefaultAttack1Object.speedY = velocity;
-                DefaultAttack1Object.body.setVelocity(0, velocity);
-            }
-        });
-
     }
 
     DefaultAttack2() {
@@ -418,29 +417,33 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
+
     specialAttack1() {
         const projectileCount = 20;      // Total de projéteis
         const interval = 300;            // Intervalo entre cada um (ms)
         const specialAttack1Velocity = 400;
         const screenWidth = this.scene.scale.width;
 
+
         for (let i = 0; i < projectileCount; i++) {
             this.scene.time.delayedCall(i * interval, () => {
-                // ⚠️ Proteções contra cena destruída ou boss destruído
-                if (!this.scene || !this.scene.sys || !this.scene.sys.isActive()) return;
-                if (!this.active) return;
+                const x = Phaser.Math.Between(0, screenWidth); // Posição aleatória no topo
+                const y = -32; // Começa fora da tela
 
-                const x = Phaser.Math.Between(0, screenWidth);
-                const y = -32;
+                const spike = this.scene.physics.add.sprite(x, y, 'bossProjectile');
+                spike.play('bossProjectileAnim');
+                console.log('eae', this.anims.exists('bossProjectileAnim'))
 
-                const spike = this.scene.physics.add.sprite(x, y, 'spikeProjectile');
-                spike.setVelocityY(specialAttack1Velocity);
+                spike.setVelocityY(specialAttack1Velocity); // Velocidade de queda vertical
                 spike.body.setAllowGravity(false);
                 spike.setScale(0.2);
-                spike.damage = 15;
-                spike.speedX = 0;
+                // ⚠️ Propriedades obrigatórias para tratamento como projétil:
+                spike.damage = 15;                     // Dano que ele causa
+                spike.isBossProjectile = true;         // Identificação como projétil do boss
+                spike.speedX = 0;                      // Movimento apenas vertical
                 spike.speedY = specialAttack1Velocity;
 
+                // Adiciona ao grupo de projéteis
                 this.bossProjectiles.add(spike);
             });
         }
@@ -451,81 +454,73 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         const randomX = Phaser.Math.Between(100, 1200);
         const randomY = Phaser.Math.Between(80, 300);
 
-        // Cria o clone e configura propriedades
-        this.clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
-        this.clone.setAlpha(0); // Começa invisível para aplicar fade-in
-        this.clone.setDepth(this.cloneDepth);
-        this.clone.setImmovable(true);
-        this.clone.body.setAllowGravity(false);
-        this.clone.setScale(this.cloneScale);
+        const clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
+        clone.setAlpha(0); // Começa invisível para aplicar fade-in
+        clone.setDepth(this.cloneDepth);
+        clone.setImmovable(true);
+        clone.body.setAllowGravity(false);
+        clone.setScale(this.cloneScale);
 
         // Parâmetros de movimento do clone
-        this.clone.baseSpeed = this.baseSpeed;
-        this.clone.direction = this.direction;
-        this.clone.verticalTargets = this.verticalTargets;
-        this.clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
-        this.clone.waveOffset = 0;
-        this.clone.verticalDirection = this.verticalDirection;
-        this.clone.verticalBarreira = this.verticalBarreira;
-        this.clone.verticalMargem = this.verticalMargem;
+        clone.baseSpeed = this.baseSpeed;
+        clone.direction = this.direction;
+        clone.verticalTargets = this.verticalTargets;
+        clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
+        clone.waveOffset = 0;
+        clone.verticalDirection = this.verticalDirection;
+        clone.verticalBarreira = this.verticalBarreira;
+        clone.verticalMargem = this.verticalMargem;
 
         // Atualização de movimento do clone
-        this.clone.updateMovement = () => {
-            const speed = this.clone.baseSpeed + 1.5;
-            this.clone.x += this.clone.direction * speed;
+        clone.updateMovement = () => {
+            const speed = clone.baseSpeed + 1.5;
+            clone.x += clone.direction * speed;
 
-            if (this.clone.x < 100 || this.clone.x > 1200) {
-                this.clone.direction *= -1;
-                this.clone.targetY = Phaser.Utils.Array.GetRandom(this.clone.verticalTargets);
+            if (clone.x < 100 || clone.x > 1200) {
+                clone.direction *= -1;
+                clone.targetY = Phaser.Utils.Array.GetRandom(clone.verticalTargets);
             }
 
-            this.clone.waveOffset += 0.05;
-            const wave = Math.sin(this.clone.waveOffset) * 10;
-            let targetYWithWave = this.clone.y + (this.clone.targetY - this.clone.y) * 0.05 + wave * 0.1;
+            clone.waveOffset += 0.05;
+            const wave = Math.sin(clone.waveOffset) * 10;
+            let targetYWithWave = clone.y + (clone.targetY - clone.y) * 0.05 + wave * 0.1;
 
+            // Verifica limites verticais
             let { newY, newDirection } = this.checkVerticalLimit(
                 targetYWithWave,
-                this.clone.verticalBarreira,
-                this.clone.verticalMargem,
-                this.clone.verticalDirection
+                clone.verticalBarreira,
+                clone.verticalMargem,
+                clone.verticalDirection
             );
 
-            this.clone.verticalDirection = newDirection;
-            this.clone.y = newY;
+            clone.verticalDirection = newDirection;
+            clone.y = newY;
         };
 
-        // Salva o callback para atualizar o clone
-        this.cloneUpdateCallback = () => {
-            if (this.clone && this.clone.active) {
-                this.clone.updateMovement();
-            }
+        // Adiciona o clone à cena para ser atualizado a cada frame
+        const updateCallback = () => {
+            if (clone.active) clone.updateMovement();
         };
-        this.scene.events.on('update', this.cloneUpdateCallback);
+        this.scene.events.on('update', updateCallback);
 
-        // Fade-in do clone
-        this.cloneFadeInTween = this.scene.tweens.add({
-            targets: this.clone,
+        // Efeito de fade-in (aparecer suavemente)
+        this.scene.tweens.add({
+            targets: clone,
             alpha: this.cloneAlpha,
             duration: 200,
             ease: 'Power1'
         });
 
-        // Agendar fade-out e destruição do clone
-        const scene = this.scene;
-        const clone = this.clone;
-        const cloneUpdateCallback = this.cloneUpdateCallback;
-
-        this.cloneDelayedCall = scene.time.delayedCall(this.cloneDuration, () => {
-            this.cloneFadeOutTween = scene.tweens.add({
+        // Agendar desaparecimento com fade-out
+        this.scene.time.delayedCall(this.cloneDuration, () => {
+            this.scene.tweens.add({
                 targets: clone,
                 alpha: 0,
                 duration: 200,
                 ease: 'Power1',
                 onComplete: () => {
-                    if (clone) {
-                        clone.destroy();
-                    }
-                    scene.events.off('update', cloneUpdateCallback);
+                    clone.destroy();
+                    this.scene.events.off('update', updateCallback);
                 }
             });
         });
@@ -535,64 +530,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
 
-    specialAttack3(time) {
-        const dashCount = 4;
-        const dashDuration = 400;
-        const pauseBetweenDashes = 200;
-        const minDistanceX = 400;
-        const avoidMargin = 200; // Mínima distância das posições anteriores
-
-        this.isDashing = true;
-        this.setVelocity(0, 0);
-        this.scene.tweens.killTweensOf(this);
-
-        let dashIndex = 0;
-        const previousPositions = [];
-
-        const doDash = () => {
-            if (dashIndex >= dashCount) {
-                this.isDashing = false;
-                this.setVelocity(0, 0);
-                return;
-            }
-
-            let newX;
-            let tries = 0;
-            do {
-                newX = Phaser.Math.Between(100, 1200);
-                tries++;
-
-                // Rejeita se estiver muito perto de alguma posição anterior
-            } while (
-                (
-                    Math.abs(newX - this.x) < minDistanceX ||
-                    previousPositions.some(prev => Math.abs(newX - prev) < avoidMargin)
-                ) && tries < 30
-            );
-
-            previousPositions.push(newX);
-            if (previousPositions.length > 3) {
-                previousPositions.shift();
-            }
-
-            this.scene.tweens.add({
-                targets: this,
-                x: newX,
-                duration: dashDuration,
-                ease: 'Power2',
-                onStart: () => {
-                    console.log(`💨 Dash ${dashIndex + 1} para x=${newX}`);
-                },
-                onComplete: () => {
-                    this.launchWallProjectile();
-                    dashIndex++;
-                    this.scene.time.delayedCall(pauseBetweenDashes, doDash);
-                }
-            });
-        };
-
-        doDash();
-    }
 
     takeDamage(amount) {
         if (this.isInvincible) return;
