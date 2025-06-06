@@ -360,8 +360,10 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     DefaultAttack1() {
         const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
-        const velocity = this.DefaultAttack1Velocity; // salva valor local do velocity
+        DefaultAttack1Object.setOrigin(0.5, 0.5);
         DefaultAttack1Object.setScale(0.3);
+        DefaultAttack1Object.play('bossProjectileAnim')
+        const velocity = this.DefaultAttack1Velocity; // salva valor local do velocity
         DefaultAttack1Object.damage = 5;
 
         // Inicialmente parado
@@ -433,7 +435,9 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 const x = Phaser.Math.Between(0, screenWidth);
                 const y = -32;
 
-                const spike = this.scene.physics.add.sprite(x, y, 'spikeProjectile');
+                const spike = this.scene.physics.add.sprite(x, y, 'bossProjectile');
+                spike.play('bossProjectileAnim');
+                
                 spike.setVelocityY(specialAttack1Velocity);
                 spike.body.setAllowGravity(false);
                 spike.setScale(0.2);
