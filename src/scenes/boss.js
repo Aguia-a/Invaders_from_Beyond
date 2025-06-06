@@ -97,25 +97,25 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
-    checkVerticalLimit(y, barreira, margem, verticalDirection) {
-        let newY = y;
-        let newDirection = verticalDirection;
+    checkVerticalLimit(y, barreira, margem, verticalDirection, scene) {
+    let newY = y;
+    let newDirection = verticalDirection;
 
-        if (newY < barreira) {
-            if (newY < barreira - margem) {
-                newDirection = 1;
-                newY = barreira - margem;
-            }
+    if (newY < barreira) {
+        if (newY < barreira - margem) {
+            newDirection = 1;
+            newY = barreira - margem;
         }
-
-        const limiteInferior = this.scene.player.sprite.y - 100;
-        if (newY > limiteInferior) {
-            newDirection = -1;
-            newY = limiteInferior;
-        }
-
-        return { newY, newDirection };
     }
+
+    const limiteInferior = scene.player.sprite.y - 100;
+    if (newY > limiteInferior) {
+        newDirection = -1;
+        newY = limiteInferior;
+    }
+
+    return { newY, newDirection };
+}
 
     handleDefaultAttacks(time) {
         const bossX = this.x;
@@ -147,7 +147,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         if (!this.isFree) {
             return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
-        this.updateMovement(this.currentPhase);
+        this.updateMovement(this.currentPhase, this.checkVerticalLimit);
 
         //DISPARO
         if (
@@ -165,11 +165,11 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             BossEffects.fase2EfeitoMudanca(this.scene, this);
         }
 
-         if (!this.isFree) {
+        if (!this.isFree) {
             return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
 
-        this.updateMovement(this.currentPhase);
+        this.updateMovement(this.currentPhase, this.checkVerticalLimit);
 
         if (
             this.canUseAttack(this.DefaultAttack1Cooldown, this.DefaultAttack1LastUsed, time) &&
@@ -217,10 +217,10 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             BossEffects.fase3EfeitoMudanca(this.scene, this);
         }
 
-         if (!this.isFree) {
+        if (!this.isFree) {
             return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
-        this.updateMovement(this.currentPhase);
+        this.updateMovement(this.currentPhase, this.checkVerticalLimit);
 
         //DISPARO E CHANCE DO DISPARO
         if (
@@ -399,34 +399,14 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.clone.verticalMargem = this.verticalMargem;
 
         // Atualização de movimento do clone
-        this.clone.updateMovement = () => {
-            const speed = this.clone.baseSpeed + 1.5;
-            this.clone.x += this.clone.direction * speed;
-
-            if (this.clone.x < 100 || this.clone.x > 1200) {
-                this.clone.direction *= -1;
-                this.clone.targetY = Phaser.Utils.Array.GetRandom(this.clone.verticalTargets);
-            }
-
-            this.clone.waveOffset += 0.05;
-            const wave = Math.sin(this.clone.waveOffset) * 10;
-            let targetYWithWave = this.clone.y + (this.clone.targetY - this.clone.y) * 0.05 + wave * 0.1;
-
-            let { newY, newDirection } = this.checkVerticalLimit(
-                targetYWithWave,
-                this.clone.verticalBarreira,
-                this.clone.verticalMargem,
-                this.clone.verticalDirection
-            );
-
-            this.clone.verticalDirection = newDirection;
-            this.clone.y = newY;
+        this.clone.updateMovement = (fase) => {
+            this.updateMovement.call(this.clone, fase, this.checkVerticalLimit);
         };
 
         // Salva o callback para atualizar o clone
         this.cloneUpdateCallback = () => {
             if (this.clone && this.clone.active) {
-                this.clone.updateMovement();
+                this.clone.updateMovement(this.currentPhase); // Sincroniza com o boss
             }
         };
         this.scene.events.on('update', this.cloneUpdateCallback);
@@ -619,109 +599,109 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.bossProjectiles.add(projectile);
     }
 
-    updateMovement(fase) {
-    switch (fase) {
-        case 1:
-            // Movimento fase 1
-            {
-                const speed = this.baseSpeed;
-                this.x += this.direction * speed;
-
-                if (this.x < 100 || this.x > 1200) {
-                    this.direction *= -1;
-                }
-
-                if (this.targetBaseY === undefined) this.targetBaseY = this.y;
-                if (this.currentBaseY === undefined) this.currentBaseY = this.y;
-                if (this.baseYTimer === undefined) this.baseYTimer = 0;
-
-                this.baseYTimer += this.scene.game.loop.delta;
-                if (this.baseYTimer > Phaser.Math.Between(2000, 4000)) {
-                    this.targetBaseY = Phaser.Math.Between(100, 400);
-                    this.baseYTimer = 0;
-                }
-
-                this.currentBaseY = Phaser.Math.Linear(this.currentBaseY, this.targetBaseY, 0.01);
-
-                this.waveOffset += 0.05;
-                const wave = Math.sin(this.waveOffset) * 10;
-
-                let { newY, newDirection } = this.checkVerticalLimit(
-                    this.currentBaseY + wave,
-                    this.verticalBarreira,
-                    this.verticalMargem,
-                    this.verticalDirection
-                );
-
-                this.verticalDirection = newDirection;
-                this.y = newY;
-            }
-            break;
-
-        case 2:
-            // Movimento fase 2
-            {
-                const speed = this.baseSpeed + 1.5;
-                this.x += this.direction * speed;
-
-                if (this.x < 100 || this.x > 1200) {
-                    this.direction *= -1;
-                    this.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
-                }
-
-                this.waveOffset += 0.05;
-                const wave = Math.sin(this.waveOffset) * 10;
-                let targetYWithWave = this.y + (this.targetY - this.y) * 0.05 + wave * 0.1;
-
-                let { newY, newDirection } = this.checkVerticalLimit(
-                    targetYWithWave,
-                    this.verticalBarreira,
-                    this.verticalMargem,
-                    this.verticalDirection
-                );
-
-                this.verticalDirection = newDirection;
-                this.y = newY;
-            }
-            break;
-
-        case 3:
-            // Movimento fase 3
-            {
-                if (!this.isDashing) {
-                    const speed = this.baseSpeed + 3;
+    updateMovement(fase, checkVerticalLimit) {
+        switch (fase) {
+            case 1:
+                {
+                    const speed = this.baseSpeed;
                     this.x += this.direction * speed;
 
-                    if (this.x < 100) {
-                        this.x = 100;
-                        this.direction *= -1;
-                    } else if (this.x > 1200) {
-                        this.x = 1200;
+                    if (this.x < 100 || this.x > 1200) {
                         this.direction *= -1;
                     }
 
-                    this.waveOffset += 0.05;
-                    const amplitude = 20;
-                    const wave = Math.sin(this.waveOffset) * amplitude;
-                    let newY = this.y + wave * 0.25;
+                    if (this.targetBaseY === undefined) this.targetBaseY = this.y;
+                    if (this.currentBaseY === undefined) this.currentBaseY = this.y;
+                    if (this.baseYTimer === undefined) this.baseYTimer = 0;
 
-                    let result = this.checkVerticalLimit(
-                        newY,
+                    this.baseYTimer += this.scene.game.loop.delta;
+                    if (this.baseYTimer > Phaser.Math.Between(2000, 4000)) {
+                        this.targetBaseY = Phaser.Math.Between(100, 400);
+                        this.baseYTimer = 0;
+                    }
+
+                    this.currentBaseY = Phaser.Math.Linear(this.currentBaseY, this.targetBaseY, 0.01);
+
+                    this.waveOffset += 0.05;
+                    const wave = Math.sin(this.waveOffset) * 10;
+
+                    let { newY, newDirection } = checkVerticalLimit(
+                        this.currentBaseY + wave,
                         this.verticalBarreira,
                         this.verticalMargem,
-                        this.verticalDirection
+                        this.verticalDirection,
+                        this.scene,
                     );
 
-                    this.verticalDirection = result.newDirection;
-                    this.y = result.newY;
+                    this.verticalDirection = newDirection;
+                    this.y = newY;
                 }
-            }
-            break;
+                break;
 
-        default:
-            console.warn('Fase de movimento inválida:', fase);
+            case 2:
+                {
+                    const speed = this.baseSpeed + 1.5;
+                    this.x += this.direction * speed;
+
+                    if (this.x < 100 || this.x > 1200) {
+                        this.direction *= -1;
+                        this.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
+                    }
+
+                    this.waveOffset += 0.05;
+                    const wave = Math.sin(this.waveOffset) * 10;
+                    let targetYWithWave = this.y + (this.targetY - this.y) * 0.05 + wave * 0.1;
+
+                    let { newY, newDirection } = checkVerticalLimit(
+                        targetYWithWave,
+                        this.verticalBarreira,
+                        this.verticalMargem,
+                        this.verticalDirection,
+                        this.scene,
+                    );
+
+                    this.verticalDirection = newDirection;
+                    this.y = newY;
+                }
+                break;
+
+            case 3:
+                {
+                    if (!this.isDashing) {
+                        const speed = this.baseSpeed + 3;
+                        this.x += this.direction * speed;
+
+                        if (this.x < 100) {
+                            this.x = 100;
+                            this.direction *= -1;
+                        } else if (this.x > 1200) {
+                            this.x = 1200;
+                            this.direction *= -1;
+                        }
+
+                        this.waveOffset += 0.05;
+                        const amplitude = 20;
+                        const wave = Math.sin(this.waveOffset) * amplitude;
+                        let newY = this.y + wave * 0.25;
+
+                        let { newY: finalY, newDirection } = checkVerticalLimit(
+                            newY,
+                            this.verticalBarreira,
+                            this.verticalMargem,
+                            this.verticalDirection,
+                            this.scene,
+                        );
+
+                        this.verticalDirection = newDirection;
+                        this.y = finalY;
+                    }
+                }
+                break;
+
+            default:
+                console.warn('Fase de movimento inválida:', fase);
+        }
     }
-}
 
 
     cleanup() {
