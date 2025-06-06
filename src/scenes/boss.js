@@ -1,6 +1,10 @@
+import BossEffects from './bossEffects.js';
+import fase1EfeitoMudanca from './bossEffects.js';
+
 export default class Boss extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'boss');
+        this.scene = scene;
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -13,13 +17,14 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.setData('isBoss', true);
         this.setCollideWorldBounds(true);
     }
-
+        this.isFree = true;
+    }
     initBossVariables() {
         // Configurações gerais do boss
         this.maxHealth = 100;
         this.health = this.maxHealth;
 
-        this.baseSpeed = 3;
+        this.baseSpeed = 5;
         this.direction = 1;
 
         this.currentPhase = 1;
@@ -82,9 +87,9 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     updatePhase() {
         const hpPercent = this.health / this.maxHealth;
-        if (hpPercent > 0.75) {
+        if (hpPercent > 0.80) {
             this.currentPhase = 1;
-        } else if (hpPercent > 0.25) {
+        } else if (hpPercent > 0.50) {
             this.currentPhase = 2;
         } else {
             this.currentPhase = 3;
@@ -135,6 +140,11 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         if (!this.fase1Iniciada) {
             console.log("O boss entrou na fase 1");
             this.fase1Iniciada = true;
+            BossEffects.fase1EfeitoMudanca(this.scene, this);
+        }
+
+        if (!this.isFree) {
+            return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
 
         const speed = this.baseSpeed;
@@ -144,10 +154,32 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.direction *= -1;
         }
 
+        // Inicializa valores se ainda não tiverem sido definidos
+        if (this.targetBaseY === undefined) this.targetBaseY = this.y;
+        if (this.currentBaseY === undefined) this.currentBaseY = this.y;
+        if (this.baseYTimer === undefined) this.baseYTimer = 0;
+
+        // Timer para mudar de posição vertical base aleatoriamente a cada 2–4 segundos
+        this.baseYTimer += this.scene.game.loop.delta;
+        if (this.baseYTimer > Phaser.Math.Between(2000, 4000)) {
+            this.targetBaseY = Phaser.Math.Between(100, 400); // Novo alvo vertical
+            this.baseYTimer = 0;
+        }
+
+        // Interpolação suave para nova base Y
+        this.currentBaseY = Phaser.Math.Linear(this.currentBaseY, this.targetBaseY, 0.01);
+
+        // Movimento vertical com onda senoidal
         this.waveOffset += 0.05;
         const wave = Math.sin(this.waveOffset) * 10;
 
-        let { newY, newDirection } = this.checkVerticalLimit(100 + wave, this.verticalBarreira, this.verticalMargem, this.verticalDirection);
+        let { newY, newDirection } = this.checkVerticalLimit(
+            this.currentBaseY + wave,
+            this.verticalBarreira,
+            this.verticalMargem,
+            this.verticalDirection
+        );
+
         this.verticalDirection = newDirection;
         this.y = newY;
 
@@ -164,6 +196,11 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         if (!this.fase2Iniciada) {
             console.log("O boss entrou na fase 2");
             this.fase2Iniciada = true;
+            BossEffects.fase2EfeitoMudanca(this.scene, this);
+        }
+
+         if (!this.isFree) {
+            return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
 
         const speed = this.baseSpeed + 1.5;
@@ -203,8 +240,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                         this.SpecialAttack1LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
-
-                    case (specialRoll >= 15 && specialRoll < 30):
+                    
+                    case (specialRoll >= 15 && specialRoll < 50):
                         console.log('Usando specialAttack2');
                         this.specialAttack2();
                         this.SpecialAttack2LastUsed = time;
@@ -228,39 +265,80 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.fase3Iniciada = true;
             this.waveOffset = 0;
             this.verticalDirection = 1;
+            BossEffects.fase3EfeitoMudanca(this.scene, this);
         }
 
-        const speed = this.baseSpeed + 3;
-        this.x += this.direction * speed;
-
-        if (this.x < 100) {
-            this.x = 100;
-            this.direction *= -1;
-        } else if (this.x > 1200) {
-            this.x = 1200;
-            this.direction *= -1;
+         if (!this.isFree) {
+            return; // se não está livre, não faz nada aqui (nem se move, nem atira)
         }
 
-        if (time - this.lastTeleport > this.teleportCooldown) {
-            if (Phaser.Math.Between(0, 100) < 30) {
-                this.teleport(time);
+        if (!this.isDashing) {
+            const speed = this.baseSpeed + 3;
+            this.x += this.direction * speed;
+
+            if (this.x < 100) {
+                this.x = 100;
+                this.direction *= -1;
+            } else if (this.x > 1200) {
+                this.x = 1200;
+                this.direction *= -1;
             }
-            this.lastTeleport = time;
+
+            this.waveOffset += 0.05;
+
+            const amplitude = 20;
+            const wave = Math.sin(this.waveOffset) * amplitude;
+
+            let newY = this.y + wave * 0.25;
+
+            let result = this.checkVerticalLimit(newY, this.verticalBarreira, this.verticalMargem, this.verticalDirection);
+            this.verticalDirection = result.newDirection;
+            this.y = result.newY;
         }
-
-        this.waveOffset += 0.05;
-
-        const amplitude = 20;
-        const wave = Math.sin(this.waveOffset) * amplitude;
-
-        let newY = this.y + wave * 0.25;
-
-        let result = this.checkVerticalLimit(newY, this.verticalBarreira, this.verticalMargem, this.verticalDirection);
-        this.verticalDirection = result.newDirection;
-        this.y = result.newY;
 
         //DISPARO E CHANCE DO DISPARO
+        if (
+            this.canUseAttack(this.DefaultAttack1Cooldown, this.DefaultAttack1LastUsed, time) &&
+            this.canUseAttack(this.DefaultAttack2Cooldown, this.DefaultAttack2LastUsed, time)
+        ) {
+            // Sorteio pra ataques especiais
+            const specialRoll = Phaser.Math.Between(0, 100);
 
+            // Verifica se passou o cooldown do special attack
+            const canUseSpecial = (time - (this.lastSpecialAttackUsed ?? 0)) >= (this.specialAttackCooldown ?? 0);
+
+            if (canUseSpecial) {
+                switch (true) {
+                    case (specialRoll < 30):
+                        console.log('Usando specialAttack1');
+                        this.specialAttack1();
+                        this.SpecialAttack1LastUsed = time;
+                        this.lastSpecialAttackUsed = time;
+                        break;
+
+                    case (specialRoll >= 30 && specialRoll < 50):
+                        console.log('Usando specialAttack2');
+                        this.specialAttack2(time);
+                        this.SpecialAttack2LastUsed = time;
+                        this.lastSpecialAttackUsed = time;
+                        break;
+
+                    case (specialRoll >= 50 && specialRoll < 90):
+                        console.log('Usando specialAttack3');
+                        this.specialAttack3(time);
+                        this.SpecialAttack3LastUsed = time;
+                        this.lastSpecialAttackUsed = time;
+                        break;
+
+                    default:
+                        this.handleDefaultAttacks(time);
+                        break;
+                }
+            } else {
+                console.log(`[Cooldown] Especial ainda em espera | canUseSpecial: ${canUseSpecial}`);
+                this.handleDefaultAttacks(time);
+            }
+        }
     }
 
     updateBossProjectiles() {
@@ -280,7 +358,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     DefaultAttack1() {
-
         const DefaultAttack1Object = this.scene.physics.add.sprite(this.x, this.y + 10, 'bossProjectile');
         DefaultAttack1Object.setOrigin(0.5, 0.5);
         DefaultAttack1Object.setScale(0.2);
@@ -449,13 +526,36 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         this.teleport(time);
     }
 
-
-
     takeDamage(amount) {
+        if (this.isInvincible) return;
+
         this.health -= amount;
+        this.health = Phaser.Math.Clamp(this.health, 0, this.maxHealth);
+
         console.log(`[Boss] HP: ${this.health}`);
+
+        this.isInvincible = true;
+
+        // Tween para piscar (ajuste a duração conforme quiser)
+        this.scene.tweens.add({
+            targets: this,
+            alpha: 0,
+            ease: 'Linear',
+            duration: 100,
+            yoyo: true,
+            repeat: 0,
+            onComplete: () => {
+                this.isInvincible = false;
+                this.setAlpha(1);
+            }
+        });
+
+        // Emitir evento para atualizar a barra
+        this.emit('damaged', this.health);
+
         if (this.health <= 0) {
             this.health = 0;
+            this.cleanup();
             this.scene.destroyBoss();
         }
     }
@@ -480,5 +580,72 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 });
             }
         });
+    }
+    launchWallProjectile() {
+        const projectile = this.scene.physics.add.sprite(this.x, this.y + 50, 'wallProjectile');
+        projectile.setImmovable(true);
+        projectile.setDepth(1);
+        projectile.setScale(1, 1); // Escala inicial
+        projectile.setOrigin(0.5, 0); // Cresce para baixo
+        projectile.speedX = 0;
+        projectile.speedY = 0;
+
+        const screenBottom = this.scene.scale.height;
+        const distanceToBottom = screenBottom - projectile.y;
+        const originalHeight = projectile.height;
+
+        const maxScaleY = distanceToBottom / originalHeight; // Escala necessária para atingir o fundo
+
+        let growth = 1;
+
+        // Crescimento simulando descida
+        const growthInterval = this.scene.time.addEvent({
+            delay: 50,
+            callback: () => {
+                if (growth < maxScaleY) {
+                    growth += 0.1;
+                    if (growth > maxScaleY) growth = maxScaleY; // Evita ultrapassar
+                    projectile.setScale(1, growth);
+                } else {
+                    growthInterval.remove();
+
+                    this.scene.time.delayedCall(1500, () => {
+                        projectile.destroy();
+                        console.log('🧱 Projétil parede removido');
+                    });
+                }
+            },
+            callbackScope: this,
+            loop: true
+        });
+
+        this.bossProjectiles.add(projectile);
+    }
+
+    cleanup() {
+        // Destrói todos os projéteis do boss
+        if (this.bossProjectiles) {
+            this.bossProjectiles.clear(true, true);
+        }
+
+        // Remove o listener update do clone, se existir
+        if (this.cloneUpdateCallback) {
+            this.scene.events.off('update', this.cloneUpdateCallback);
+            this.cloneUpdateCallback = null;
+        }
+
+        // Destroi o clone, se existir
+        if (this.clone) {
+            this.clone.destroy();
+            this.clone = null;
+        }
+
+        // Para todos os tweens associados ao boss
+        this.scene.tweens.killTweensOf(this);
+
+        // Se você tiver timers guardados, limpe eles aqui
+        // Exemplo: if (this.myTimer) { this.myTimer.remove(); this.myTimer = null; }
+
+        // Outras limpezas específicas podem ser adicionadas aqui
     }
 }

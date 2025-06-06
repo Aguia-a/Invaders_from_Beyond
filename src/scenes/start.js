@@ -55,7 +55,7 @@ export class Start extends Phaser.Scene {
         });
 
         const pressText = this.add.text(centerX, this.scale.height - 90, 'PRESS ENTER KEY FOR START', {
-            fontFamily: 'Futura Display',
+            fontFamily: 'Pixelify Sans',
             fontSize: '24px',
             color: '#ffffff',
             shadow: {

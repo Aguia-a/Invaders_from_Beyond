@@ -3,7 +3,7 @@ import { Player } from './player.js';
 import { FirePlayer } from './fireplayer.js';
 import { openPauseMenu } from './menuscene.js';
 import { EnemyNormal } from './EnemyNormal.js';
-
+import BossInterface, { createBossInterface } from './interface.js';
 
 export class Game extends Phaser.Scene {
     constructor() {
@@ -34,6 +34,10 @@ export class Game extends Phaser.Scene {
         });
         this.load.image('bossClone', 'assets/boss.spaceship.png');
         this.load.image('orb', 'assets/simpleAttack.png');
+        this.load.image('spikeProjectile', 'assets/bullet.png');
+        this.load.image('wallProjectile', 'assets/wall-projectile.png');
+
+        this.load.image('flash', 'assets/flash_particle.png');
     }
 
     create(data) {
@@ -56,8 +60,8 @@ export class Game extends Phaser.Scene {
 
         this.firePlayer = new FirePlayer(this, this.player.sprite);
 
-        this.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
-        this.inGameMusic.play();
+        this.game.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
+        this.game.inGameMusic.play();
 
         this.hitSound = this.sound.add("hitSound");
         this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 });
@@ -74,6 +78,7 @@ export class Game extends Phaser.Scene {
 
         this.boss = null;
 
+
         this.createEnemiesForLevel(this.level);
 
         this.anims.create({
@@ -82,22 +87,26 @@ export class Game extends Phaser.Scene {
             frameRate: 20,
             hideOnComplete: true
         });
-
+      
         this.anims.create({
              key: 'bossProjectileAnim',
              frames: this.anims.generateFrameNumbers('bossProjectile', { start: 0, end: 7 }), // ajuste os frames!
              frameRate: 10,
              repeat: -1
          });
-        
+
     }
 
     createEnemiesForLevel(level) {
         this.normalEnemies.clear(true, true);
 
-        if (level === 1) {
-            this.boss = new Boss(this, 640, 100);
+        if (level === 5) {
+            this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
             this.checkCollisions();
+
+            this.boss.on('damaged', (currentHealth) => {
+                this.BossInterface.updateHealth(currentHealth, this.boss.maxHealth);
+            });
         } else {
             let numEnemies;
             const pattern = (level - 1) % 5;
@@ -184,6 +193,8 @@ export class Game extends Phaser.Scene {
 
     destroyBoss() {
         if (!this.boss) return;
+
+        //BossEffects.pararTremor(this.scene);
 
         this.hitSoundEnemy.play();
 

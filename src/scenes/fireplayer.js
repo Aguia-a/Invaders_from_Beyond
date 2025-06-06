@@ -1,5 +1,5 @@
 export class FirePlayer {
-    constructor(scene, playerSprite, damage = 10) {
+    constructor(scene, playerSprite, damage = 5) {
         this.scene = scene;
         this.playerSprite = playerSprite;
 
@@ -33,7 +33,7 @@ export class FirePlayer {
         // Move as balas para cima
         this.bullets.children.each(bullet => {
             if (bullet.active) {
-                bullet.y -= 10;
+                bullet.y -= 20;
                 // Remove bala se sair da tela
                 if (bullet.y < 0) {
                     bullet.destroy();
