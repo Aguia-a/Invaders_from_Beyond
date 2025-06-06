@@ -126,7 +126,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
         const roll = Phaser.Math.Between(0, 100);
 
-        //console.log(`[Boss Attack Roll] Distância: ${horizontalDist.toFixed(1)} | Chance: ${chance.toFixed(1)}% | Sorteio: ${roll}`);
 
         if (roll <= chance) {
             this.DefaultAttack1();
@@ -186,14 +185,12 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             if (canUseSpecial) {
                 switch (true) {
                     case (specialRoll < 15):
-                        console.log('Usando specialAttack1');
                         this.specialAttack1();
                         this.SpecialAttack1LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
 
                     case (specialRoll >= 15 && specialRoll < 50):
-                        console.log('Usando specialAttack2');
                         this.specialAttack2();
                         this.SpecialAttack2LastUsed = time;
                         this.lastSpecialAttackUsed = time;
@@ -204,7 +201,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                         break;
                 }
             } else {
-                console.log(`[Cooldown] Especial ainda em espera | canUseSpecial: ${canUseSpecial}`);
                 this.handleDefaultAttacks(time);
             }
         }
@@ -239,21 +235,18 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             if (canUseSpecial) {
                 switch (true) {
                     case (specialRoll < 30):
-                        console.log('Usando specialAttack1');
                         this.specialAttack1();
                         this.SpecialAttack1LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
 
                     case (specialRoll >= 30 && specialRoll < 50):
-                        console.log('Usando specialAttack2');
                         this.specialAttack2(time);
                         this.SpecialAttack2LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
 
                     case (specialRoll >= 50 && specialRoll < 90):
-                        console.log('Usando specialAttack3');
                         this.specialAttack3(time);
                         this.SpecialAttack3LastUsed = time;
                         this.lastSpecialAttackUsed = time;
@@ -264,7 +257,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                         break;
                 }
             } else {
-                console.log(`[Cooldown] Especial ainda em espera | canUseSpecial: ${canUseSpecial}`);
                 this.handleDefaultAttacks(time);
             }
         }
@@ -471,7 +463,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 duration: dashDuration,
                 ease: 'Power2',
                 onStart: () => {
-                    console.log(`💨 Dash ${dashIndex + 1} para x=${newX}`);
                 },
                 onComplete: () => {
                     this.launchWallProjectile();
@@ -569,7 +560,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
                     this.scene.time.delayedCall(1500, () => {
                         projectile.destroy();
-                        console.log('🧱 Projétil parede removido');
                     });
                 }
             },
@@ -709,7 +699,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.cloneDelayedCall.remove();
         }
 
-        console.log('[Clone] Removido imediatamente.');
     } else {
         // Destruição com fade-out (usada pelo timer normalmente)
         this.cloneFadeOutTween = this.scene.tweens.add({
@@ -728,7 +717,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                     this.cloneUpdateCallback = null;
                 }
 
-                console.log('[Clone] Removido pelo contador.');
             }
         });
 
