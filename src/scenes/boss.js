@@ -24,6 +24,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         // Configurações gerais do boss
         this.maxHealth = 125;
         this.health = this.maxHealth;
+        this.isInvincible = true;
+
 
         this.baseSpeed = 5;
         this.direction = 1;
@@ -185,7 +187,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             if (canUseSpecial) {
                 switch (true) {
                     case (specialRoll < 15):
-                        this.specialAttack1();
+                        this.specialAttack1(20, 300);
                         this.SpecialAttack1LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
@@ -235,7 +237,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             if (canUseSpecial) {
                 switch (true) {
                     case (specialRoll < 30):
-                        this.specialAttack1();
+                        this.specialAttack1(40, 300);
                         this.SpecialAttack1LastUsed = time;
                         this.lastSpecialAttackUsed = time;
                         break;
@@ -340,9 +342,9 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
-    specialAttack1() {
-        const projectileCount = 20;      // Total de projéteis
-        const interval = 300;            // Intervalo entre cada um (ms)
+    specialAttack1(quantit, intervalo) {
+        const projectileCount = quantit;      // Total de projéteis
+        const interval = intervalo;            // Intervalo entre cada um (ms)
         const specialAttack1Velocity = 400;
         const screenWidth = this.scene.scale.width;
 
@@ -476,14 +478,15 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     takeDamage(amount) {
-        if (this.isInvincible) return;
+        if (this.isInvincible){
+        console.log("Boss, está invencivel!")    
+        return};
+        console.log("A função TakeDamage, está sendo chamada! direitinho")
 
         this.health -= amount;
         this.health = Phaser.Math.Clamp(this.health, 0, this.maxHealth);
 
         console.log(`[Boss] HP: ${this.health}`);
-
-        this.isInvincible = true;
 
         // Tween para piscar (ajuste a duração conforme quiser)
         this.scene.tweens.add({
