@@ -98,24 +98,24 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     checkVerticalLimit(y, barreira, margem, verticalDirection, scene) {
-    let newY = y;
-    let newDirection = verticalDirection;
+        let newY = y;
+        let newDirection = verticalDirection;
 
-    if (newY < barreira) {
-        if (newY < barreira - margem) {
-            newDirection = 1;
-            newY = barreira - margem;
+        if (newY < barreira) {
+            if (newY < barreira - margem) {
+                newDirection = 1;
+                newY = barreira - margem;
+            }
         }
-    }
 
-    const limiteInferior = scene.player.sprite.y - 100;
-    if (newY > limiteInferior) {
-        newDirection = -1;
-        newY = limiteInferior;
-    }
+        const limiteInferior = scene.player.sprite.y - 100;
+        if (newY > limiteInferior) {
+            newDirection = -1;
+            newY = limiteInferior;
+        }
 
-    return { newY, newDirection };
-}
+        return { newY, newDirection };
+    }
 
     handleDefaultAttacks(time) {
         const bossX = this.x;
@@ -371,50 +371,50 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     specialAttack2(time) {
-    const randomX = Phaser.Math.Between(100, 1200);
-    const randomY = Phaser.Math.Between(80, 300);
+        const randomX = Phaser.Math.Between(100, 1200);
+        const randomY = Phaser.Math.Between(80, 300);
 
-    this.clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
-    this.clone.setAlpha(0);
-    this.clone.setDepth(this.cloneDepth);
-    this.clone.setImmovable(true);
-    this.clone.body.setAllowGravity(false);
-    this.clone.setScale(this.cloneScale);
+        this.clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
+        this.clone.setAlpha(0);
+        this.clone.setDepth(this.cloneDepth);
+        this.clone.setImmovable(true);
+        this.clone.body.setAllowGravity(false);
+        this.clone.setScale(this.cloneScale);
 
-    this.clone.baseSpeed = this.baseSpeed;
-    this.clone.direction = this.direction;
-    this.clone.verticalTargets = this.verticalTargets;
-    this.clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
-    this.clone.waveOffset = 0;
-    this.clone.verticalDirection = this.verticalDirection;
-    this.clone.verticalBarreira = this.verticalBarreira;
-    this.clone.verticalMargem = this.verticalMargem;
+        this.clone.baseSpeed = this.baseSpeed;
+        this.clone.direction = this.direction;
+        this.clone.verticalTargets = this.verticalTargets;
+        this.clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
+        this.clone.waveOffset = 0;
+        this.clone.verticalDirection = this.verticalDirection;
+        this.clone.verticalBarreira = this.verticalBarreira;
+        this.clone.verticalMargem = this.verticalMargem;
 
-    this.clone.updateMovement = (fase) => {
-        this.updateMovement.call(this.clone, fase, this.checkVerticalLimit);
-    };
+        this.clone.updateMovement = (fase) => {
+            this.updateMovement.call(this.clone, fase, this.checkVerticalLimit);
+        };
 
-    this.cloneUpdateCallback = () => {
-        if (this.clone && this.clone.active) {
-            this.clone.updateMovement(this.currentPhase);
-        }
-    };
-    this.scene.events.on('update', this.cloneUpdateCallback);
+        this.cloneUpdateCallback = () => {
+            if (this.clone && this.clone.active) {
+                this.clone.updateMovement(this.currentPhase);
+            }
+        };
+        this.scene.events.on('update', this.cloneUpdateCallback);
 
-    this.cloneFadeInTween = this.scene.tweens.add({
-        targets: this.clone,
-        alpha: this.cloneAlpha,
-        duration: 200,
-        ease: 'Power1'
-    });
+        this.cloneFadeInTween = this.scene.tweens.add({
+            targets: this.clone,
+            alpha: this.cloneAlpha,
+            duration: 200,
+            ease: 'Power1'
+        });
 
-    // Timer para remover clone automaticamente após cloneDuration
-    this.cloneDelayedCall = this.scene.time.delayedCall(this.cloneDuration, () => {
-        this.removeClone(); // Chama função de remoção ao final da duração
-    });
+        // Timer para remover clone automaticamente após cloneDuration
+        this.cloneDelayedCall = this.scene.time.delayedCall(this.cloneDuration, () => {
+            this.removeClone(); // Chama função de remoção ao final da duração
+        });
 
-    this.teleport(time);
-}
+        this.teleport(time);
+    }
 
 
     specialAttack3(time) {
@@ -558,9 +558,13 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 } else {
                     growthInterval.remove();
 
-                    this.scene.time.delayedCall(1500, () => {
-                        projectile.destroy();
-                    });
+                    if (projectile.scene && projectile.scene.time) {
+                        projectile.scene.time.delayedCall(1500, () => {
+                            projectile.destroy();
+                        });
+                    } else {
+                        projectile.destroy(); // Segurança caso a cena tenha sido destruída
+                    }
                 }
             },
             callbackScope: this,
@@ -675,56 +679,56 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     removeClone(force = false) {
-    if (!this.clone) return;
+        if (!this.clone) return;
 
-    if (force) {
-        // Força destruição imediata do clone
-        if (this.cloneFadeInTween && this.cloneFadeInTween.isPlaying()) {
-            this.cloneFadeInTween.stop();
-        }
-
-        if (this.cloneFadeOutTween && this.cloneFadeOutTween.isPlaying()) {
-            this.cloneFadeOutTween.stop();
-        }
-
-        this.clone.destroy();
-        this.clone = null;
-
-        if (this.cloneUpdateCallback) {
-            this.scene.events.off('update', this.cloneUpdateCallback);
-            this.cloneUpdateCallback = null;
-        }
-
-        if (this.cloneDelayedCall && this.cloneDelayedCall.getProgress() < 1) {
-            this.cloneDelayedCall.remove();
-        }
-
-    } else {
-        // Destruição com fade-out (usada pelo timer normalmente)
-        this.cloneFadeOutTween = this.scene.tweens.add({
-            targets: this.clone,
-            alpha: 0,
-            duration: 200,
-            ease: 'Power1',
-            onComplete: () => {
-                if (this.clone) {
-                    this.clone.destroy();
-                    this.clone = null;
-                }
-
-                if (this.cloneUpdateCallback) {
-                    this.scene.events.off('update', this.cloneUpdateCallback);
-                    this.cloneUpdateCallback = null;
-                }
-
+        if (force) {
+            // Força destruição imediata do clone
+            if (this.cloneFadeInTween && this.cloneFadeInTween.isPlaying()) {
+                this.cloneFadeInTween.stop();
             }
-        });
 
-        if (this.cloneDelayedCall && this.cloneDelayedCall.getProgress() < 1) {
-            this.cloneDelayedCall.remove(); // Cancela o timer original, já que está sendo destruído aqui
+            if (this.cloneFadeOutTween && this.cloneFadeOutTween.isPlaying()) {
+                this.cloneFadeOutTween.stop();
+            }
+
+            this.clone.destroy();
+            this.clone = null;
+
+            if (this.cloneUpdateCallback) {
+                this.scene.events.off('update', this.cloneUpdateCallback);
+                this.cloneUpdateCallback = null;
+            }
+
+            if (this.cloneDelayedCall && this.cloneDelayedCall.getProgress() < 1) {
+                this.cloneDelayedCall.remove();
+            }
+
+        } else {
+            // Destruição com fade-out (usada pelo timer normalmente)
+            this.cloneFadeOutTween = this.scene.tweens.add({
+                targets: this.clone,
+                alpha: 0,
+                duration: 200,
+                ease: 'Power1',
+                onComplete: () => {
+                    if (this.clone) {
+                        this.clone.destroy();
+                        this.clone = null;
+                    }
+
+                    if (this.cloneUpdateCallback) {
+                        this.scene.events.off('update', this.cloneUpdateCallback);
+                        this.cloneUpdateCallback = null;
+                    }
+
+                }
+            });
+
+            if (this.cloneDelayedCall && this.cloneDelayedCall.getProgress() < 1) {
+                this.cloneDelayedCall.remove(); // Cancela o timer original, já que está sendo destruído aqui
+            }
         }
     }
-}
 
 
     cleanup() {
