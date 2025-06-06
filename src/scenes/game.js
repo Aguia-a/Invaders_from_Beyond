@@ -90,7 +90,7 @@ export class Game extends Phaser.Scene {
     createEnemiesForLevel(level) {
         this.normalEnemies.clear(true, true);
 
-        if (level === 2) {
+        if (level === 5) {
             this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
             this.checkCollisions();
 
