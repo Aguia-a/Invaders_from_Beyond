@@ -22,7 +22,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     initBossVariables() {
         // Configurações gerais do boss
-        this.maxHealth = 100;
+        this.maxHealth = 125;
         this.health = this.maxHealth;
 
         this.baseSpeed = 5;
@@ -142,6 +142,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             console.log("O boss entrou na fase 1");
             this.fase1Iniciada = true;
             BossEffects.fase1EfeitoMudanca(this.scene, this);
+            this.removeClone(true);
         }
 
         if (!this.isFree) {
@@ -163,6 +164,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             console.log("O boss entrou na fase 2");
             this.fase2Iniciada = true;
             BossEffects.fase2EfeitoMudanca(this.scene, this);
+            this.removeClone(true);
         }
 
         if (!this.isFree) {
@@ -215,6 +217,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             this.waveOffset = 0;
             this.verticalDirection = 1;
             BossEffects.fase3EfeitoMudanca(this.scene, this);
+            this.removeClone(true);
         }
 
         if (!this.isFree) {
@@ -376,72 +379,50 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     specialAttack2(time) {
-        // Define posição aleatória semelhante à do teleporte
-        const randomX = Phaser.Math.Between(100, 1200);
-        const randomY = Phaser.Math.Between(80, 300);
+    const randomX = Phaser.Math.Between(100, 1200);
+    const randomY = Phaser.Math.Between(80, 300);
 
-        // Cria o clone e configura propriedades
-        this.clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
-        this.clone.setAlpha(0); // Começa invisível para aplicar fade-in
-        this.clone.setDepth(this.cloneDepth);
-        this.clone.setImmovable(true);
-        this.clone.body.setAllowGravity(false);
-        this.clone.setScale(this.cloneScale);
+    this.clone = this.scene.physics.add.sprite(randomX, randomY, 'bossClone');
+    this.clone.setAlpha(0);
+    this.clone.setDepth(this.cloneDepth);
+    this.clone.setImmovable(true);
+    this.clone.body.setAllowGravity(false);
+    this.clone.setScale(this.cloneScale);
 
-        // Parâmetros de movimento do clone
-        this.clone.baseSpeed = this.baseSpeed;
-        this.clone.direction = this.direction;
-        this.clone.verticalTargets = this.verticalTargets;
-        this.clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
-        this.clone.waveOffset = 0;
-        this.clone.verticalDirection = this.verticalDirection;
-        this.clone.verticalBarreira = this.verticalBarreira;
-        this.clone.verticalMargem = this.verticalMargem;
+    this.clone.baseSpeed = this.baseSpeed;
+    this.clone.direction = this.direction;
+    this.clone.verticalTargets = this.verticalTargets;
+    this.clone.targetY = Phaser.Utils.Array.GetRandom(this.verticalTargets);
+    this.clone.waveOffset = 0;
+    this.clone.verticalDirection = this.verticalDirection;
+    this.clone.verticalBarreira = this.verticalBarreira;
+    this.clone.verticalMargem = this.verticalMargem;
 
-        // Atualização de movimento do clone
-        this.clone.updateMovement = (fase) => {
-            this.updateMovement.call(this.clone, fase, this.checkVerticalLimit);
-        };
+    this.clone.updateMovement = (fase) => {
+        this.updateMovement.call(this.clone, fase, this.checkVerticalLimit);
+    };
 
-        // Salva o callback para atualizar o clone
-        this.cloneUpdateCallback = () => {
-            if (this.clone && this.clone.active) {
-                this.clone.updateMovement(this.currentPhase); // Sincroniza com o boss
-            }
-        };
-        this.scene.events.on('update', this.cloneUpdateCallback);
+    this.cloneUpdateCallback = () => {
+        if (this.clone && this.clone.active) {
+            this.clone.updateMovement(this.currentPhase);
+        }
+    };
+    this.scene.events.on('update', this.cloneUpdateCallback);
 
-        // Fade-in do clone
-        this.cloneFadeInTween = this.scene.tweens.add({
-            targets: this.clone,
-            alpha: this.cloneAlpha,
-            duration: 200,
-            ease: 'Power1'
-        });
+    this.cloneFadeInTween = this.scene.tweens.add({
+        targets: this.clone,
+        alpha: this.cloneAlpha,
+        duration: 200,
+        ease: 'Power1'
+    });
 
-        // Agendar fade-out e destruição do clone
-        const scene = this.scene;
-        const clone = this.clone;
-        const cloneUpdateCallback = this.cloneUpdateCallback;
+    // Timer para remover clone automaticamente após cloneDuration
+    this.cloneDelayedCall = this.scene.time.delayedCall(this.cloneDuration, () => {
+        this.removeClone(); // Chama função de remoção ao final da duração
+    });
 
-        this.cloneDelayedCall = scene.time.delayedCall(this.cloneDuration, () => {
-            this.cloneFadeOutTween = scene.tweens.add({
-                targets: clone,
-                alpha: 0,
-                duration: 200,
-                ease: 'Power1',
-                onComplete: () => {
-                    if (clone) {
-                        clone.destroy();
-                    }
-                    scene.events.off('update', cloneUpdateCallback);
-                }
-            });
-        });
-
-        // Teleporta o boss logo após criar o clone
-        this.teleport(time);
-    }
+    this.teleport(time);
+}
 
 
     specialAttack3(time) {
@@ -703,6 +684,60 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
+    removeClone(force = false) {
+    if (!this.clone) return;
+
+    if (force) {
+        // Força destruição imediata do clone
+        if (this.cloneFadeInTween && this.cloneFadeInTween.isPlaying()) {
+            this.cloneFadeInTween.stop();
+        }
+
+        if (this.cloneFadeOutTween && this.cloneFadeOutTween.isPlaying()) {
+            this.cloneFadeOutTween.stop();
+        }
+
+        this.clone.destroy();
+        this.clone = null;
+
+        if (this.cloneUpdateCallback) {
+            this.scene.events.off('update', this.cloneUpdateCallback);
+            this.cloneUpdateCallback = null;
+        }
+
+        if (this.cloneDelayedCall && this.cloneDelayedCall.getProgress() < 1) {
+            this.cloneDelayedCall.remove();
+        }
+
+        console.log('[Clone] Removido imediatamente.');
+    } else {
+        // Destruição com fade-out (usada pelo timer normalmente)
+        this.cloneFadeOutTween = this.scene.tweens.add({
+            targets: this.clone,
+            alpha: 0,
+            duration: 200,
+            ease: 'Power1',
+            onComplete: () => {
+                if (this.clone) {
+                    this.clone.destroy();
+                    this.clone = null;
+                }
+
+                if (this.cloneUpdateCallback) {
+                    this.scene.events.off('update', this.cloneUpdateCallback);
+                    this.cloneUpdateCallback = null;
+                }
+
+                console.log('[Clone] Removido pelo contador.');
+            }
+        });
+
+        if (this.cloneDelayedCall && this.cloneDelayedCall.getProgress() < 1) {
+            this.cloneDelayedCall.remove(); // Cancela o timer original, já que está sendo destruído aqui
+        }
+    }
+}
+
 
     cleanup() {
         // Destrói todos os projéteis do boss
@@ -725,9 +760,5 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         // Para todos os tweens associados ao boss
         this.scene.tweens.killTweensOf(this);
 
-        // Se você tiver timers guardados, limpe eles aqui
-        // Exemplo: if (this.myTimer) { this.myTimer.remove(); this.myTimer = null; }
-
-        // Outras limpezas específicas podem ser adicionadas aqui
     }
 }
