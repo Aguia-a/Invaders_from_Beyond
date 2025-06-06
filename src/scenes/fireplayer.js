@@ -1,5 +1,5 @@
 export class FirePlayer {
-    constructor(scene, playerSprite, damage = 10) {
+    constructor(scene, playerSprite, damage = 5) {
         this.scene = scene;
         this.playerSprite = playerSprite;
 
