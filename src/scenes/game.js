@@ -23,15 +23,17 @@ export class Game extends Phaser.Scene {
         this.load.audio('hitSound', 'assets/impactSound01.mp3');
         this.load.audio('hitSoundEnemy', 'assets/impactSound02.mp3');
         this.load.image('enemyAttack', 'assets/simpleAttack.png');
+        this.load.spritesheet('bossProjectile', 'assets/specialProjectile.png', {
+            frameWidth: 169,
+            frameHeight: 396 
+        });
 
         this.load.spritesheet('explosion', 'assets/explosionEnemy.png', {
-            frameWidth: 128,
-            frameHeight: 128
+            frameWidth: 220,
+            frameHeight: 195
         });
         this.load.image('bossClone', 'assets/boss.spaceship.png');
-        this.load.image('bossProjectile', 'assets/bullet.png');
         this.load.image('orb', 'assets/simpleAttack.png');
-        this.load.image('spikeProjectile', 'assets/bullet.png');
     }
 
     create(data) {
@@ -80,6 +82,14 @@ export class Game extends Phaser.Scene {
             frameRate: 20,
             hideOnComplete: true
         });
+
+        this.anims.create({
+             key: 'bossProjectileAnim',
+             frames: this.anims.generateFrameNumbers('bossProjectile', { start: 0, end: 7 }), // ajuste os frames!
+             frameRate: 10,
+             repeat: -1
+         });
+        
     }
 
     createEnemiesForLevel(level) {
@@ -158,8 +168,8 @@ export class Game extends Phaser.Scene {
         enemy.disableBody(true, true);
         enemy.canShoot = false;
         const explosion = this.add.sprite(enemy.x, enemy.y, 'explosion')
-            .setScale(0.6)
-            .setOrigin(0.5)
+            .setScale(0.4)
+            .setOrigin(0.5, 0.5)
             .setDepth(10);
         explosion.play('explode');
         explosion.on('animationcomplete', () => explosion.destroy());
