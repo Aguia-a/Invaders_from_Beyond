@@ -51,20 +51,49 @@ export function getRandomStarColor() {
 }
 
 // Escolhe aleatoriamente um tipo de estrela e o estilo (A ou B)
-export function chooseStarType() {
-    const style = Phaser.Math.Between(0, 1); // 0 ou 1
-    const frame = Phaser.Math.Between(0, 3); // 0 a 3
+export function chooseStarType(probTable = [0.8, 0.2]) {
+    const roll = Math.random(); // Número entre 0 e 1
+    let cumulative = 0;
+    let style = 0;
 
-    // Definição de escala por tipo de estrela
-    const minScale = style === 0 ? 0.3 : 1.2;
-    const maxScale = style === 0 ? 0.7 : 2.3;
+    for (let i = 0; i < probTable.length; i++) {
+        cumulative += probTable[i];
+        if (roll < cumulative) {
+            style = i;
+            break;
+        }
+    }
 
-    // Definição de alpha por tipo de estrela
-    const minAlpha = style === 0 ? 0.1 : 0.6;
-    const maxAlpha = style === 0 ? 0.4 : 1.0;
+    const frame = Phaser.Math.Between(0, 3);
+
+    let minScale, maxScale, minAlpha, maxAlpha;
+
+    switch (style) {
+        case 0: // Tipo A
+            minScale = 0.3;
+            maxScale = 0.7;
+            minAlpha = 0.1;
+            maxAlpha = 0.4;
+            break;
+
+        case 1: // Tipo B
+            minScale = 1.2;
+            maxScale = 2.3;
+            minAlpha = 0.6;
+            maxAlpha = 1.0;
+            break;
+
+        // Adicione mais cases conforme necessário
+        default:
+            minScale = 1.0;
+            maxScale = 1.0;
+            minAlpha = 1.0;
+            maxAlpha = 1.0;
+    }
 
     return { style, frame, minScale, maxScale, minAlpha, maxAlpha };
 }
+
 
 // Cria a estrela na posição x, y com estilo, frame e cor
 export function createStar(scene, x, y, typeInfo, color = 0xffffff) {
