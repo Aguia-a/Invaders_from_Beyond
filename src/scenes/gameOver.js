@@ -9,12 +9,10 @@ export default class GameOverScene extends Phaser.Scene {
         console.log("Moreuu")
         const { width, height } = this.cameras.main;
 
-        // Overlay escuro ao fundo
-        const overlay = this.add.image(width / 2, height / 2, 'gameOverBg')
-            .setDisplaySize(width, height)
-            .setScrollFactor(0)
-            .setDepth(10)
-            .setAlpha(0);
+        //Fundo Escuro
+        this.add.rectangle(0, 0, width * 2, height * 2, 0x000000, 0.5)
+        .setOrigin(0)
+        .setDepth(10);
 
         // Texto "Game Over"
         const gameOverText = this.add.image(width / 2, height / 2, 'gameOverText')
@@ -31,14 +29,6 @@ export default class GameOverScene extends Phaser.Scene {
             .setOrigin(0.5)
             .setDepth(11)
             .setAlpha(0)
-
-        // Animação de entrada (overlay)
-        this.tweens.add({
-            targets: overlay,
-            alpha: 0.4,
-            duration: 500,
-            ease: 'Linear'
-        });
 
         // Animação de entrada dos textos
         // Tween apenas para o gameOverText (imagem)

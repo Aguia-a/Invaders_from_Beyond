@@ -26,7 +26,7 @@ export class EnemyNormal extends Phaser.Physics.Arcade.Sprite {
         // Atirar aleatoriamente
         if (this.canShoot && Phaser.Math.Between(0, 1000) < 1) {
             const bullet = this.scene.enemyBullets.create(this.x, this.y + 20, 'enemyAttack')
-                .setScale(0.05)
+                .setScale(0.5)
                 .setDepth(1);
 
             const dx = player.x - this.x;

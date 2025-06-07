@@ -319,7 +319,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
         offsets.forEach(offsetX => {
             const orb = this.scene.physics.add.sprite(this.x + offsetX, this.y, 'orb');
-            orb.setScale(0.05);
+            orb.setScale(0.5);
             orb.damage = 10;
 
             const dirX = playerX - orb.x;
