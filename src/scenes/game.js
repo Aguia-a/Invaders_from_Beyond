@@ -3,8 +3,19 @@ import { Player } from './player.js';
 import { FirePlayer } from './fireplayer.js';
 import { pauseSistem } from './menuscene.js';
 import { EnemyNormal } from './EnemyNormal.js';
-
 import BossInterface, { createBossInterface } from './interface.js';
+import { setupBackgroundSystem } from './backgroundSystem.js';
+import {
+    chooseStarType,
+    generateStarTypeAFrames,
+    generateStarTypeBFrames,
+    createStar,
+    updateStarsFall
+} from './backgroundSystem.js';
+
+
+
+
 
 
 export class Game extends Phaser.Scene {
@@ -13,8 +24,8 @@ export class Game extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('background02', 'assets/purpleStars.png');
-        this.load.image('gameOverBg', 'assets/background02.png')
+        this.load.image('background02', 'assets/background01.png');
+        this.load.image('gameOverBg', 'assets/background02.png');
         this.load.image('ship1', 'assets/yellow.spaceship.png');
         this.load.image('ship2', 'assets/blue.spaceship.png');
         this.load.image('ship3', 'assets/red.spaceship.png');
@@ -30,7 +41,7 @@ export class Game extends Phaser.Scene {
         this.load.image('orb', 'assets/simpleAttack.png');
         this.load.image('wallProjectile', 'assets/wall-projectile.png');
         this.load.image('flash', 'assets/flash_particle.png');
-        this.load.image('gameOverText', 'assets/gameOverText.png')
+        this.load.image('gameOverText', 'assets/gameOverText.png');
 
         this.load.spritesheet('bossProjectile', 'assets/specialProjectile.png', {
             frameWidth: 169,
@@ -54,10 +65,21 @@ export class Game extends Phaser.Scene {
         const selectedShip = data.selectedShip || 'ship1';
         const { width, height } = this.scale;
 
-        this.background02 = this.add.tileSprite(0, 0, width, height, 'background02')
-            .setOrigin(0)
-            .setScrollFactor(0)
-            .setAlpha(0.5);
+        setupBackgroundSystem(this);
+        
+        generateStarTypeAFrames(this);
+        generateStarTypeBFrames(this);
+
+        const stars = [];
+        for (let i = 0; i < 50; i++) {
+            const x = Phaser.Math.Between(0, this.scale.width);
+            const y = Phaser.Math.Between(0, this.scale.height);
+            const type = chooseStarType();
+            const star = createStar(this, x, y, type);
+            stars.push(star);
+        }
+
+        this.stars = stars;
 
         this.player = new Player(this, 640, 660, selectedShip);
 
@@ -69,9 +91,7 @@ export class Game extends Phaser.Scene {
         this.hitSound = this.sound.add("hitSound");
         this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 });
 
-        // Grupo dos inimigos normais
         this.normalEnemies = this.physics.add.group();
-
         this.enemyBullets = this.physics.add.group();
 
         this.level = 1;
@@ -80,7 +100,6 @@ export class Game extends Phaser.Scene {
         this.levelText = this.add.text(1120, 680, 'Nível: 1', { fontSize: '28px', fill: '#fff' });
 
         this.boss = null;
-
 
         this.createEnemiesForLevel(this.level);
 
@@ -91,14 +110,12 @@ export class Game extends Phaser.Scene {
             hideOnComplete: true
         });
 
-
         this.anims.create({
             key: 'bossProjectileAnim',
-            frames: this.anims.generateFrameNumbers('bossProjectile', { start: 0, end: 7 }), // ajuste os frames!
+            frames: this.anims.generateFrameNumbers('bossProjectile', { start: 0, end: 7 }),
             frameRate: 10,
             repeat: -1
         });
-
     }
 
     createEnemiesForLevel(level) {
@@ -151,7 +168,9 @@ export class Game extends Phaser.Scene {
         this.player.update(time);
         this.firePlayer.update(time);
 
-        this.background02.tilePositionY -= 1;
+        updateStarsFall(this, this.stars);
+
+
 
         this.enemyBullets.children.each(bullet => {
             if (bullet && bullet.y > 800) bullet.destroy();
@@ -188,8 +207,6 @@ export class Game extends Phaser.Scene {
     destroyBoss() {
         if (!this.boss) return;
 
-        //BossEffects.pararTremor(this.scene);
-
         this.hitSoundEnemy.play();
 
         const explosion = this.add.sprite(this.boss.x, this.boss.y, 'explosion')
@@ -215,18 +232,17 @@ export class Game extends Phaser.Scene {
 
     checkCollisions() {
         if (this.boss && this.boss.bossProjectiles) {
-            // Colisão: tiros do player atingem o boss
             this.physics.add.overlap(this.boss, this.firePlayer.bullets, (boss, bullet) => {
                 bullet.destroy();
                 boss.takeDamage(bullet.damage || 10);
             });
 
-            // Colisão: tiros do boss atingem o player
             this.physics.add.overlap(this.player.sprite, this.boss.bossProjectiles, (playerSprite, bossProjectile) => {
                 bossProjectile.destroy();
                 this.player.takeDamage(this.hitSound);
             });
         }
+
         this.physics.add.overlap(this.firePlayer.bullets, this.normalEnemies, this.destroyEnemy, null, this);
         this.physics.add.overlap(this.player.sprite, this.enemyBullets, this.hitPlayer, null, this);
     }
