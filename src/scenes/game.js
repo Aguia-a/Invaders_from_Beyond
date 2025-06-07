@@ -9,6 +9,7 @@ import {
     chooseStarType,
     generateStarTypeAFrames,
     generateStarTypeBFrames,
+    generateStars,
     createStar,
     updateStarsFall
 } from './backgroundSystem.js';
