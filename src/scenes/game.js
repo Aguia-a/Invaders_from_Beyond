@@ -25,7 +25,7 @@ export class Game extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('background02', 'assets/background01.png');
+        this.load.image('background02', 'assets/background03.png');
         this.load.image('gameOverBg', 'assets/background02.png');
         this.load.image('ship1', 'assets/yellow.spaceship.png');
         this.load.image('ship2', 'assets/blue.spaceship.png');
@@ -108,7 +108,7 @@ export class Game extends Phaser.Scene {
     createEnemiesForLevel(level) {
         this.normalEnemies.clear(true, true);
 
-        if (level === 1) {
+        if (level === 5) {
             this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
             this.checkCollisions();
 

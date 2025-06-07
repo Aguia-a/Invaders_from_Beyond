@@ -195,7 +195,7 @@ export function updateStarsFall(scene) {
     if (!scene.stars) return;
 
     for (const star of scene.stars) {
-        star.y += 0.15;
+        star.y += 0.05;
 
         if (star.y > height) {
             star.y = 0;
