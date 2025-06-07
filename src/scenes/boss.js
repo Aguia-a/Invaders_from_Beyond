@@ -754,17 +754,6 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     // Para todos os tweens associados ao boss
     this.scene.tweens.killTweensOf(this);
-
-    // Para e destrói a aura do boss, se existir
-    if (this.auraEmitter) {
-        this.auraEmitter.stop();
-
-        if (this.auraEmitter.manager && typeof this.auraEmitter.manager.destroy === 'function') {
-            this.auraEmitter.manager.destroy();
-        }
-
-        this.auraEmitter = null;
-    }
 }
 
 }
