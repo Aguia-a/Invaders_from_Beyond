@@ -67,20 +67,6 @@ export class Game extends Phaser.Scene {
         const { width, height } = this.scale;
 
         setupBackgroundSystem(this);
-        
-        generateStarTypeAFrames(this);
-        generateStarTypeBFrames(this);
-
-        const stars = [];
-        for (let i = 0; i < 50; i++) {
-            const x = Phaser.Math.Between(0, this.scale.width);
-            const y = Phaser.Math.Between(0, this.scale.height);
-            const type = chooseStarType();
-            const star = createStar(this, x, y, type);
-            stars.push(star);
-        }
-
-        this.stars = stars;
 
         this.player = new Player(this, 640, 660, selectedShip);
 
