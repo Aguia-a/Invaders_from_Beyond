@@ -1,6 +1,23 @@
 export function setupBackgroundSystem(scene, scale) {
-    // Controla todo o sistema de fundo
+    // Cria o fundo
     createBackground(scene);
+
+    // Gera os frames dos dois tipos de estrela
+    generateStarTypeAFrames(scene);
+    generateStarTypeBFrames(scene);
+
+    // Cria e posiciona as estrelas na cena
+    const stars = [];
+    for (let i = 0; i < 50; i++) {
+        const x = Phaser.Math.Between(0, scene.scale.width);
+        const y = Phaser.Math.Between(0, scene.scale.height);
+        const type = chooseStarType(scene);
+        const star = createStar(scene, x, y, type);
+        stars.push(star);
+    }
+
+    // Armazena a lista no scene
+    scene.stars = stars;
 }
 
 function createBackground(scene) {
