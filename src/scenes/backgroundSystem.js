@@ -34,7 +34,16 @@ function createBackground(scene) {
 export function chooseStarType() {
     const style = Phaser.Math.Between(0, 1); // 0 ou 1
     const frame = Phaser.Math.Between(0, 3); // 0 a 3
-    return { style, frame };
+
+    // Definição de escala por tipo de estrela
+    const minScale = style === 0 ? 0.3 : 1.2;
+    const maxScale = style === 0 ? 0.9 : 2.3;
+
+    // Definição de alpha por tipo de estrela
+    const minAlpha = style === 0 ? 0.1 : 0.6;
+    const maxAlpha = style === 0 ? 0.4 : 1.0;
+
+    return { style, frame, minScale, maxScale, minAlpha, maxAlpha };
 }
 
 // Gera os frames para estrelas tipo A (círculo cintilante)
@@ -102,32 +111,25 @@ export function generateStarTypeBFrames(scene) {
 
 // Cria a estrela na posição x, y com estilo e frame
 export function createStar(scene, x, y, typeInfo) {
-    const { style, frame } = typeInfo;
+    const { style, frame, minScale, maxScale, minAlpha, maxAlpha } = typeInfo;
     const textureKey = `star${style}_frame_${frame}`;
     const animKey = `starTwinkle${style}`;
 
+    // Sorteia a escala
+    const scale = Phaser.Math.FloatBetween(minScale, maxScale);
+
+    // Normaliza a escala para um valor entre 0 e 1
+    const normalizedScale = (scale - minScale) / (maxScale - minScale);
+
+    // Interpola o alpha baseado na escala
+    const alpha = minAlpha + normalizedScale * (maxAlpha - minAlpha);
+
     const star = scene.add.sprite(x, y, textureKey)
-        .setScale(Phaser.Math.FloatBetween(0.5, 3))
-        .setAlpha(Phaser.Math.FloatBetween(0.5, 1));
+        .setScale(scale)
+        .setAlpha(alpha);
 
     star.play(animKey);
     return star;
-}
-
-// Atualiza as estrelas para "caírem"
-export function updateStarsFall(scene) {
-    const { width, height } = scene.scale;
-
-    if (!scene.stars) return;
-
-    for (const star of scene.stars) {
-        star.y += 0.4;
-
-        if (star.y > height) {
-            star.y = 0;
-            star.x = Phaser.Math.Between(0, width);
-        }
-    }
 }
 
 export function generateStars(scene) {
@@ -162,5 +164,21 @@ export function generateStars(scene) {
     }
 
     scene.stars = stars;
+}
+
+// Atualiza as estrelas para "caírem"
+export function updateStarsFall(scene) {
+    const { width, height } = scene.scale;
+
+    if (!scene.stars) return;
+
+    for (const star of scene.stars) {
+        star.y += 0.15;
+
+        if (star.y > height) {
+            star.y = 0;
+            star.x = Phaser.Math.Between(0, width);
+        }
+    }
 }
 
