@@ -1,3 +1,5 @@
+import { pauseSistem } from './menuscene.js';
+
 export class Player {
     constructor(scene, x, y, texture) {
         this.scene = scene;
@@ -5,8 +7,9 @@ export class Player {
             .setCollideWorldBounds(true)
             .setScale(0.08);
 
-        this.sprite.body.setSize(100, 150); // Largura e altura da área de colisão
-        this.sprite.body.setOffset(20, 30); // Deslocamento da hitbox dentro do sprite
+        this.sprite.setScale(0.08);
+        this.sprite.body.setSize(200, 250);
+        this.sprite.body.setOffset((1023 - 200) / 2, (1016 - 250) / 2);  // resultado: (411.5, 383)F
 
         this.cursors = scene.input.keyboard.createCursorKeys();
 
@@ -24,7 +27,7 @@ export class Player {
 
     update(time) {
         this.handleNormalMovement();
-}
+    }
 
     updateHealthIcons() {
         this.healthIcons.forEach(icon => icon.destroy());
@@ -73,11 +76,7 @@ export class Player {
     }
 
     die() {
-        this.scene.add.text(640, 360, 'GAME OVER', {
-            fontSize: '64px',
-            fill: '#ff0000'
-        }).setOrigin(0.5);
-        this.scene.scene.pause();
+        pauseSistem(this.scene, 'gameOverScene')
     }
 
     handleNormalMovement() {
