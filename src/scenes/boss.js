@@ -735,25 +735,36 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
 
     cleanup() {
-        // Destrói todos os projéteis do boss
-        if (this.bossProjectiles) {
-            this.bossProjectiles.clear(true, true);
-        }
-
-        // Remove o listener update do clone, se existir
-        if (this.cloneUpdateCallback) {
-            this.scene.events.off('update', this.cloneUpdateCallback);
-            this.cloneUpdateCallback = null;
-        }
-
-        // Destroi o clone, se existir
-        if (this.clone) {
-            this.clone.destroy();
-            this.clone = null;
-        }
-
-        // Para todos os tweens associados ao boss
-        this.scene.tweens.killTweensOf(this);
-
+    // Destrói todos os projéteis do boss
+    if (this.bossProjectiles) {
+        this.bossProjectiles.clear(true, true);
     }
+
+    // Remove o listener update do clone, se existir
+    if (this.cloneUpdateCallback) {
+        this.scene.events.off('update', this.cloneUpdateCallback);
+        this.cloneUpdateCallback = null;
+    }
+
+    // Destroi o clone, se existir
+    if (this.clone) {
+        this.clone.destroy();
+        this.clone = null;
+    }
+
+    // Para todos os tweens associados ao boss
+    this.scene.tweens.killTweensOf(this);
+
+    // Para e destrói a aura do boss, se existir
+    if (this.auraEmitter) {
+        this.auraEmitter.stop();
+
+        if (this.auraEmitter.manager && typeof this.auraEmitter.manager.destroy === 'function') {
+            this.auraEmitter.manager.destroy();
+        }
+
+        this.auraEmitter = null;
+    }
+}
+
 }

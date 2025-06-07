@@ -11,8 +11,9 @@ export function setupBackgroundSystem(scene, scale) {
     for (let i = 0; i < 50; i++) {
         const x = Phaser.Math.Between(0, scene.scale.width);
         const y = Phaser.Math.Between(0, scene.scale.height);
-        const type = chooseStarType(scene);
-        const star = createStar(scene, x, y, type);
+        const type = chooseStarType();
+        const color = getRandomStarColor();  // Escolhe a cor aqui
+        const star = createStar(scene, x, y, type, color); // Passa a cor para a criação da estrela
         stars.push(star);
     }
 
@@ -23,11 +24,30 @@ export function setupBackgroundSystem(scene, scale) {
 function createBackground(scene) {
     const { width, height } = scene.scale;
 
-    // Cria imagem de fundo principal
+    // Fator de ampliação (10% a mais em cada direção)
+    const marginFactor = 1.1;
+
+    // Cria imagem de fundo principal com margem extra
     scene.background = scene.add.image(width / 2, height / 2, 'background02')
-        .setDisplaySize(width, height)
+        .setDisplaySize(width * marginFactor, height * marginFactor)
         .setOrigin(0.5, 0.5)
         .setScrollFactor(0);
+}
+
+export function getRandomStarColor() {
+    // Paleta de cores possíveis (hex)
+    const colors = [
+        0xffffff, // branco
+        0xfff9c4, // amarelo claro
+        0xfff176, // amarelo mais forte
+        0x66ccff, // azul claro
+        0x99ccff, // azul clarinho
+        0xcc99ff, // lilás claro
+        0xe0e0e0, // cinza claro (quase branco)
+    ];
+
+    // Retorna uma cor aleatória da paleta
+    return Phaser.Utils.Array.GetRandom(colors);
 }
 
 // Escolhe aleatoriamente um tipo de estrela e o estilo (A ou B)
@@ -37,13 +57,37 @@ export function chooseStarType() {
 
     // Definição de escala por tipo de estrela
     const minScale = style === 0 ? 0.3 : 1.2;
-    const maxScale = style === 0 ? 0.9 : 2.3;
+    const maxScale = style === 0 ? 0.7 : 2.3;
 
     // Definição de alpha por tipo de estrela
     const minAlpha = style === 0 ? 0.1 : 0.6;
     const maxAlpha = style === 0 ? 0.4 : 1.0;
 
     return { style, frame, minScale, maxScale, minAlpha, maxAlpha };
+}
+
+// Cria a estrela na posição x, y com estilo, frame e cor
+export function createStar(scene, x, y, typeInfo, color = 0xffffff) {
+    const { style, frame, minScale, maxScale, minAlpha, maxAlpha } = typeInfo;
+    const textureKey = `star${style}_frame_${frame}`;
+    const animKey = `starTwinkle${style}`;
+
+    // Sorteia a escala
+    const scale = Phaser.Math.FloatBetween(minScale, maxScale);
+
+    // Normaliza a escala para um valor entre 0 e 1
+    const normalizedScale = (scale - minScale) / (maxScale - minScale);
+
+    // Interpola o alpha baseado na escala
+    const alpha = minAlpha + normalizedScale * (maxAlpha - minAlpha);
+
+    const star = scene.add.sprite(x, y, textureKey)
+        .setScale(scale)
+        .setAlpha(alpha)
+        .setTint(color); // Aplica a cor da estrela
+
+    star.play(animKey);
+    return star;
 }
 
 // Gera os frames para estrelas tipo A (círculo cintilante)
@@ -108,33 +152,10 @@ export function generateStarTypeBFrames(scene) {
     });
 }
 
-
-// Cria a estrela na posição x, y com estilo e frame
-export function createStar(scene, x, y, typeInfo) {
-    const { style, frame, minScale, maxScale, minAlpha, maxAlpha } = typeInfo;
-    const textureKey = `star${style}_frame_${frame}`;
-    const animKey = `starTwinkle${style}`;
-
-    // Sorteia a escala
-    const scale = Phaser.Math.FloatBetween(minScale, maxScale);
-
-    // Normaliza a escala para um valor entre 0 e 1
-    const normalizedScale = (scale - minScale) / (maxScale - minScale);
-
-    // Interpola o alpha baseado na escala
-    const alpha = minAlpha + normalizedScale * (maxAlpha - minAlpha);
-
-    const star = scene.add.sprite(x, y, textureKey)
-        .setScale(scale)
-        .setAlpha(alpha);
-
-    star.play(animKey);
-    return star;
-}
-
+// Função que gera estrelas evitando que fiquem muito próximas, agora com cor correta
 export function generateStars(scene) {
-    const starCount = 70;
-    const minDistance = 20;
+    const starCount = 30;
+    const minDistance = 40;
     const stars = [];
     const { width, height } = scene.scale;
     let attempts = 0;
@@ -158,8 +179,9 @@ export function generateStars(scene) {
 
         if (tooClose) continue;
 
-        const type = chooseStarType(); // tipo = { style, frame }
-        const star = createStar(scene, x, y, type);
+        const type = chooseStarType();
+        const color = getRandomStarColor();
+        const star = createStar(scene, x, y, type, color);  // Passa a cor aqui
         stars.push(star);
     }
 
@@ -181,4 +203,3 @@ export function updateStarsFall(scene) {
         }
     }
 }
-

@@ -28,6 +28,42 @@ export default class BossEffects {
         });
     }
 
+    static efeitoAura(scene, boss, ativo, quant, tinta, expansao) {
+    if (!scene || !scene.add || !scene.add.particles) {
+        console.warn('[efeitoAura] Cena inválida. Partículas não criadas.');
+        return;
+    }
+
+    if (!boss.auraEmitter && ativo) {
+        const emitter = scene.add.particles(0, 0, 'flash', {
+            x: 0,
+            y: 0,
+            speed: { min: 20, max: 60 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 0.5, end: 0 },
+            alpha: { start: 0.4, end: 0 },
+            lifespan: expansao,
+            quantity: quant,
+            frequency: 100,
+            blendMode: 'MULTIPLY',
+            tint: tinta
+        });
+
+        emitter.startFollow(boss);
+        boss.auraEmitter = emitter;
+    }
+
+    if (boss.auraEmitter && !ativo) {
+        boss.auraEmitter.stop();
+
+        if (boss.auraEmitter.manager && typeof boss.auraEmitter.manager.destroy === 'function') {
+            boss.auraEmitter.manager.destroy();
+        }
+
+        boss.auraEmitter = null;
+    }
+}
+
     static efeitoTremor(scene, intensidade, duracao, delay) {
         if (scene.cameras && scene.cameras.main) {
             if (delay > 0) {
@@ -84,6 +120,7 @@ export default class BossEffects {
         });
         this.efeitoFlashMudancaDeFase(scene, boss, 25, 2000);
         this.efeitoTremor(scene, 0.01, sincronia / 2, 100);
+        this.efeitoAura(scene, boss, true, 2, 0x323232, 1000);
     }
 
     // Efeito visual ao mudar para a Fase 3 do boss
@@ -93,6 +130,8 @@ export default class BossEffects {
         boss.isFree = false;
         boss.setActive(false); // opcional, desativa visualmente ou logicamente se necessário
         boss.isInvincible = true;
+        this.efeitoAura(scene, boss, false);
+
 
         // Duração personalizada (em milissegundos)
         const tempoParaLiberar = 2000; // por exemplo, 2 segundos
@@ -106,5 +145,6 @@ export default class BossEffects {
         });
         this.efeitoFlashMudancaDeFase(scene, boss, 100, 2000);
         this.efeitoTremor(scene, 0.01, sincronia / 2, 100);
+        this.efeitoAura(scene, boss, true, 4, 0x000000, 1500);
     }
 }
