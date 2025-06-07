@@ -1,8 +1,9 @@
 import Boss from './boss.js';
 import { Player } from './player.js';
 import { FirePlayer } from './fireplayer.js';
-import { openPauseMenu } from './menuscene.js';
+import { pauseSistem } from './menuscene.js';
 import { EnemyNormal } from './EnemyNormal.js';
+
 import BossInterface, { createBossInterface } from './interface.js';
 
 
@@ -13,6 +14,7 @@ export class Game extends Phaser.Scene {
 
     preload() {
         this.load.image('background02', 'assets/purpleStars.png');
+        this.load.image('gameOverBg', 'assets/background02.png')
         this.load.image('ship1', 'assets/yellow.spaceship.png');
         this.load.image('ship2', 'assets/blue.spaceship.png');
         this.load.image('ship3', 'assets/red.spaceship.png');
@@ -25,15 +27,14 @@ export class Game extends Phaser.Scene {
         this.load.audio('hitSoundEnemy', 'assets/impactSound02.mp3');
         this.load.image('enemyAttack', 'assets/simpleAttack.png');
         this.load.image('bossClone', 'assets/boss.spaceship.png');
-        this.load.image('bossProjectile', 'assets/bullet.png');
         this.load.image('orb', 'assets/simpleAttack.png');
-        this.load.image('spikeProjectile', 'assets/bullet.png');
         this.load.image('wallProjectile', 'assets/wall-projectile.png');
         this.load.image('flash', 'assets/flash_particle.png');
+        this.load.image('gameOverText', 'assets/gameOverText.png')
 
         this.load.spritesheet('bossProjectile', 'assets/specialProjectile.png', {
             frameWidth: 169,
-            frameHeight: 396 
+            frameHeight: 396
         });
 
         this.load.spritesheet('explosion', 'assets/explosionEnemy.png', {
@@ -45,7 +46,7 @@ export class Game extends Phaser.Scene {
     create(data) {
         // ESC → abrir menu
         this.input.keyboard.on('keydown-ESC', () => {
-            openPauseMenu(this);  // Passa essa cena como contexto
+            pauseSistem(this, 'menuscene');  // Passa essa cena como contexto
         });
 
         this.damageBossKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H);
@@ -90,14 +91,14 @@ export class Game extends Phaser.Scene {
             hideOnComplete: true
         });
 
-        
+
         this.anims.create({
-             key: 'bossProjectileAnim',
-             frames: this.anims.generateFrameNumbers('bossProjectile', { start: 0, end: 7 }), // ajuste os frames!
-             frameRate: 10,
-             repeat: -1
-         });
-        
+            key: 'bossProjectileAnim',
+            frames: this.anims.generateFrameNumbers('bossProjectile', { start: 0, end: 7 }), // ajuste os frames!
+            frameRate: 10,
+            repeat: -1
+        });
+
     }
 
     createEnemiesForLevel(level) {
@@ -151,16 +152,6 @@ export class Game extends Phaser.Scene {
         this.firePlayer.update(time);
 
         this.background02.tilePositionY -= 1;
-
-        this.normalEnemies.children.iterate(enemy => {
-            if (enemy && enemy.y > 660) {
-                this.add.text(640, 360, 'GAME OVER', {
-                    fontSize: '64px',
-                    fill: '#ff0000'
-                }).setOrigin(0.5);
-                this.scene.pause();
-            }
-        });
 
         this.enemyBullets.children.each(bullet => {
             if (bullet && bullet.y > 800) bullet.destroy();

@@ -1,7 +1,6 @@
-export function openPauseMenu(currentScene) {
-  console.log('[DEBUG] openPauseMenu foi chamado');
+export function pauseSistem(currentScene, newScene ) {
   currentScene.scene.pause();              // Pausa a cena atual (ex: GameScene)
-  currentScene.scene.launch('menuscene');  // Inicia o menu por cima
+  currentScene.scene.launch(`${newScene}`);  // Inicia o menu por cima
 }
 
 export default class MenuScene extends Phaser.Scene {
@@ -106,7 +105,7 @@ export default class MenuScene extends Phaser.Scene {
     btn.on('pointerout', () => btn.clearTint());
 
     btn.on('pointerdown', () => {
-      console.log('Botão reiniciar clicado');
+      this.game.inGameMusic.stop()
       this.scene.stop('Game');
       this.scene.start('Game');
       this.scene.stop();
