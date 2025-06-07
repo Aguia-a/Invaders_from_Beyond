@@ -5,6 +5,8 @@ export function setupBackgroundSystem(scene, scale) {
     // Gera os frames dos dois tipos de estrela
     generateStarTypeAFrames(scene);
     generateStarTypeBFrames(scene);
+    generateStarTypeCFrames(scene);
+
 
     // Cria e posiciona as estrelas na cena
     const stars = [];
@@ -51,7 +53,7 @@ export function getRandomStarColor() {
 }
 
 // Escolhe aleatoriamente um tipo de estrela e o estilo (A ou B)
-export function chooseStarType(probTable = [0.8, 0.2]) {
+export function chooseStarType(probTable = [0.8, 0.15, 0.05]) {
     const roll = Math.random(); // Número entre 0 e 1
     let cumulative = 0;
     let style = 0;
@@ -83,12 +85,19 @@ export function chooseStarType(probTable = [0.8, 0.2]) {
             maxAlpha = 1.0;
             break;
 
+        case 2:
+            minScale = 0.9; //O tamanho natural dela é o dobro do das outras
+            maxScale = 1.5;
+            minAlpha = 0.4;
+            maxAlpha = 0.7;
+            break;
+
         // Adicione mais cases conforme necessário
         default:
-            minScale = 1.0;
-            maxScale = 1.0;
-            minAlpha = 1.0;
-            maxAlpha = 1.0;
+            minScale = 1;
+            maxScale = 1;
+            minAlpha = 1;
+            maxAlpha = 1;
     }
 
     return { style, frame, minScale, maxScale, minAlpha, maxAlpha };
@@ -181,6 +190,47 @@ export function generateStarTypeBFrames(scene) {
     });
 }
 
+export function generateStarTypeCFrames(scene) {
+    const frameSize = 64;
+    const centerX = frameSize / 2;
+    const centerY = frameSize / 2;
+
+    for (let i = 0; i < 4; i++) {
+        const rt = scene.make.graphics({ x: 0, y: 0, add: false });
+
+        const alpha = 0.3 + 0.15 * i;
+        rt.fillStyle(0xffffff, alpha);
+
+        const verticalHeight = 32 + i * 4; // Linha vertical mais longa
+        const horizontalWidth = 20 + i * 2; // Linha horizontal menor
+
+        const thickness = 4;
+
+        // Linha vertical (mais longa)
+        rt.fillRect(centerX - thickness / 2, centerY - verticalHeight / 2, thickness, verticalHeight);
+
+        // Linha horizontal (mais próxima do topo da vertical)
+        const offsetY = -verticalHeight / 2 + 10 + i; // deslocamento para ficar mais no topo
+        rt.fillRect(centerX - horizontalWidth / 2, centerY + offsetY, horizontalWidth, thickness);
+
+        rt.generateTexture(`star2_frame_${i}`, frameSize, frameSize);
+        rt.destroy();
+    }
+
+    scene.anims.create({
+        key: 'starTwinkle2',
+        frames: [
+            { key: 'star2_frame_0' },
+            { key: 'star2_frame_1' },
+            { key: 'star2_frame_2' },
+            { key: 'star2_frame_3' },
+            { key: 'star2_frame_2' },
+            { key: 'star2_frame_1' },
+        ],
+        frameRate: 6,
+        repeat: -1
+    });
+}
 // Função que gera estrelas evitando que fiquem muito próximas, agora com cor correta
 export function generateStars(scene) {
     const starCount = 30;
