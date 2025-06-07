@@ -5,7 +5,7 @@ export class EnemyNormal extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
-        this.setScale(0.08);
+        this.setScale(0.8);
         this.setDepth(1);
         this.canShoot = true;
         this.speed = 3;
