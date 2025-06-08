@@ -431,6 +431,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
         this.isDashing = true;
         this.setVelocity(0, 0);
+        this.setAlpha(1);
         this.scene.tweens.killTweensOf(this);
 
         let dashIndex = 0;
@@ -440,6 +441,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             if (dashIndex >= dashCount) {
                 this.isDashing = false;
                 this.setVelocity(0, 0);
+                this.setAlpha(1);
                 return;
             }
 

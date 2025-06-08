@@ -70,6 +70,7 @@ export default class DemoEnd extends Phaser.Scene {
 
                 // Aceitar reinício da demo ao pressionar qualquer tecla
                 this.input.keyboard.once('keydown', () => {
+                    this.game.inGameMusic.stop();
                     this.scene.stop('Game');
                     this.scene.start('Start'); // Volta para tela de seleção ou início da demo
                 });

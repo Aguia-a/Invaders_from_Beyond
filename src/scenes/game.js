@@ -125,44 +125,57 @@ export class Game extends Phaser.Scene {
     }
 
     createEnemiesForLevel(level) {
+    //Se o level for 11, chama o DemoEnd
     if (level === 11) {
         pauseSistem(this, 'demoEnd');
         return;  // Sai da função para não criar inimigos
     }
 
     this.normalEnemies.clear(true, true);
-
+    //Cria o boss na fase 10, se não for a fase 10 cria os inimigos padrões, e define o formato e a quantidade.
     if (level === 10) {
-        this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
-        this.checkCollisions();
+    this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
+    this.checkCollisions();
 
-        this.boss.on('damaged', (currentHealth) => {
-            this.BossInterface.updateHealth(currentHealth, this.boss.maxHealth);
-        });
-    } else {
-        let numEnemies;
-        const pattern = (level - 1) % 5;
-        if (pattern === 0) numEnemies = 3;
-        else if (pattern === 1) numEnemies = 6;
-        else if (pattern === 2) numEnemies = 10;
-        else numEnemies = 15;
+    this.boss.on('damaged', (currentHealth) => {
+        this.BossInterface.updateHealth(currentHealth, this.boss.maxHealth);
+    });
 
-        const rows = Math.ceil((Math.sqrt(8 * numEnemies + 1) - 1) / 2);
-        const startY = 80;
+} else {
+    const baseEnemies = 5;
+    const incrementPerLevel = 2;
+    const numEnemies = baseEnemies + (level - 1) * incrementPerLevel;
 
-        for (let row = 0; row < rows; row++) {
-            const enemiesInRow = row + 1;
-            const y = startY + (rows - 1 - row) * 80;
-            const startX = 640 - (enemiesInRow - 1) * 50;
+    const columns = 5; // máx. de inimigos por linha
+    const spacingX = 100;
+    const spacingY = 80;
+    const startY = 80;
 
-            for (let i = 0; i < enemiesInRow; i++) {
-                const x = startX + i * 100;
-                const enemy = new EnemyNormal(this, x, y);
-                this.normalEnemies.add(enemy);
-            }
+    const centerX = this.scale.width / 2;
+    const rows = Math.ceil(numEnemies / columns);
+
+    let created = 0;
+
+    for (let row = 0; row < rows; row++) {
+        const remainingEnemies = numEnemies - created;
+        const enemiesThisRow = Math.min(columns, remainingEnemies);
+
+        const totalWidth = (enemiesThisRow - 1) * spacingX;
+        const offsetX = centerX - totalWidth / 2;
+        const y = startY + row * spacingY;
+
+        for (let col = 0; col < enemiesThisRow; col++) {
+            const x = offsetX + col * spacingX;
+
+            const enemy = new EnemyNormal(this, x, y);
+            this.normalEnemies.add(enemy);
+
+            created++;
         }
-        this.checkCollisions();
     }
+
+    this.checkCollisions();
+}
 }
 
     update(time, delta) {
