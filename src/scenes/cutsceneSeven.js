@@ -1,6 +1,6 @@
-export class CutsceneOne extends Phaser.Scene {
+export class CutsceneSeven extends Phaser.Scene {
   constructor() {
-    super('CutsceneOne');
+    super('CutsceneSeven');
   }
 
   // Pré-carrega os assets necessários para a cena
@@ -39,17 +39,16 @@ export class CutsceneOne extends Phaser.Scene {
     // Mensagem do overlord
     this.currentMessage = 
     '[Transmissão Invasora]\n' +
-    '— Civilização 8431 detectada...\n' +	
-    'Condição: útil...\n' +
-    'Extração de recursos iniciada...\n' +
-    'Resistência: irrelevante.';
+    '— Divertido. Iniciando protocolo de ondas.\n' +
+    'Observaremos sua agonia com.....\n' +
+    'interesse.\n';
 
     this.currentIndex = 0;
     this.typeNextChar();
 
-    // Inicia a próxima cena (CutsceneTwo) quando ENTER for pressionado
+    // Inicia a próxima cena (CutsceneEight) quando ENTER for pressionado
     this.input.keyboard.once('keydown-ENTER', () => {
-      this.scene.start('CutsceneTwo');
+      this.scene.start('CutsceneEight');
     });
 
     // Listener para redimensionamento da tela
