@@ -233,7 +233,7 @@ export class CutsceneTwo extends Phaser.Scene {
         this.messageText.setText(currentText);
       }
       this.currentIndex++;
-      this.time.delayedCall(55, this.typeNextChar, [], this);
+      this.time.delayedCall(25, this.typeNextChar, [], this);
     }
   }
 
