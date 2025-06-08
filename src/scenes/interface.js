@@ -6,7 +6,7 @@ export default class BossInterface {
         this.width = width;
         this.height = height;
 
-        this.healthBarBg = this.scene.add.rectangle(x, -50, width, height, 0x000000).setOrigin(0.5, 0);
+        this.healthBarBg = this.scene.add.rectangle(x, -50, width, height, 0x000000, 0).setOrigin(0.5, 0);
         this.healthBarFill = this.scene.add.rectangle(x, -48, width - 4, height - 4, 0xff0000).setOrigin(0.5, 0);
 
         this.healthBarBg.setDepth(10);
