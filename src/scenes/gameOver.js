@@ -30,7 +30,7 @@ export default class GameOverScene extends Phaser.Scene {
 
         // Texto "Press Any Key For Restart"
         const pressKeyText = this.add.text(width / 2, height / 2 + 70, 'Press Any Key For Restart', {
-            font: '20px Pixelify',
+            font: '20px Pixelify sans',
             fill: '#FFFFFF'
         })
             .setOrigin(0.5)

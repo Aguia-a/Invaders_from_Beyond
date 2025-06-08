@@ -1,13 +1,13 @@
-export class CutsceneOne extends Phaser.Scene {
+export class CutsceneFour extends Phaser.Scene {
   constructor() {
-    super('CutsceneOne');
+    super('CutsceneFour');
   }
 
   // Pré-carrega os assets necessários para a cena
   preload() {
     this.load.image('background', 'assets/startWallpaper.png');
     this.load.image('stars', 'assets/purpleStars.png');
-    this.load.image('overlord', 'assets/overlordShadow.png');
+    this.load.image('captain', 'assets/kusko.chat.sprite.png');
   }
 
   create() {
@@ -36,20 +36,18 @@ export class CutsceneOne extends Phaser.Scene {
     this.setupResponsiveLayout();
 
     // Inicializa variáveis para o efeito typewriter
-    // Mensagem do overlord
+    // Mensagem do capitão
     this.currentMessage = 
-    '[Transmissão Invasora]\n' +
-    '— Civilização 8431 detectada...\n' +	
-    'Condição: útil...\n' +
-    'Extração de recursos iniciada...\n' +
-    'Resistência: irrelevante.';
+    '[Comandante Nova Kusko]\n' +
+    'Então vocês já nos estudaram... vieram preparados.\n' +
+    'Mas o plano de vocês tem uma pequena falha.\n';
 
     this.currentIndex = 0;
     this.typeNextChar();
 
-    // Inicia a próxima cena (CutsceneTwo) quando ENTER for pressionado
+    // Inicia a próxima cena (CutsceneFive) quando ENTER for pressionado
     this.input.keyboard.once('keydown-ENTER', () => {
-      this.scene.start('CutsceneTwo');
+      this.scene.start('CutsceneFive');
     });
 
     // Listener para redimensionamento da tela
@@ -64,21 +62,21 @@ export class CutsceneOne extends Phaser.Scene {
     const isMobile = width < 768;
     const isTablet = width >= 768 && width < 1024;
 
-    // Configurações do overlord - sempre na parte inferior direita
-    let overlordConfig = this.getOverlordConfig(width, height, isMobile, isTablet);
+    // Configurações do capitão - sempre na parte inferior
+    let captainConfig = this.getCaptainConfig(width, height, isMobile, isTablet);
     
-    // Remove overlord anterior se existir
-    if (this.overlord) {
-      this.overlord.destroy();
+    // Remove capitão anterior se existir
+    if (this.captain) {
+      this.captain.destroy();
     }
 
-    // Adiciona o sprite do overlord sempre na base da tela à direita
-    this.overlord = this.add.image(overlordConfig.x, overlordConfig.y, 'overlord');
-    this.overlord.setScale(overlordConfig.scale);
-    this.overlord.setOrigin(0.5, 1); // Origem na base do sprite para ficar sempre no chão
+    // Adiciona o sprite do capitão sempre na base da tela
+    this.captain = this.add.image(captainConfig.x, captainConfig.y, 'captain');
+    this.captain.setScale(captainConfig.scale);
+    this.captain.setOrigin(0.5, 1); // Origem na base do sprite para ficar sempre no chão
 
-    // Configurações da bolha - sempre à esquerda do personagem
-    let bubbleConfig = this.getBubbleConfig(width, height, isMobile, isTablet, overlordConfig);
+    // Configurações da bolha - sempre à direita do personagem
+    let bubbleConfig = this.getBubbleConfig(width, height, isMobile, isTablet, captainConfig);
 
     // Remove bolha anterior se existir
     if (this.bubble) {
@@ -124,69 +122,66 @@ export class CutsceneOne extends Phaser.Scene {
     }).setOrigin(0, 0);
   }
 
-  getOverlordConfig(width, height, isMobile, isTablet) {
+  getCaptainConfig(width, height, isMobile, isTablet) {
     let config = {};
 
     if (isMobile) {
-      // Mobile: personagem na direita
-      config.x = width * 0.75;
-      // Ajuste para sprite 500x500px
-      config.scale = Math.min(width / 1000, height / 800) * 0.6;
-      // Posiciona para que o topo fique na mesma altura que o captain original
-      config.y = height - (500 * config.scale * 0.3); // Ajuste para manter o topo alinhado
+      // Mobile: personagem na esquerda, parte inferior
+      config.x = width * 0.25;
+      config.y = height; // Sempre na base da tela
+      config.scale = Math.min(width / 800, height / 600) * 0.7;
     } else if (isTablet) {
-      // Tablet: personagem na direita
-      config.x = width * 0.8;
-      // Ajuste para sprite 500x500px
-      config.scale = Math.min(width / 1200, height / 900) * 0.7;
-      // Posiciona para que o topo fique na mesma altura que o captain original
-      config.y = height - (500 * config.scale * 0.25); // Ajuste para manter o topo alinhado
+      // Tablet: personagem na esquerda, parte inferior
+      config.x = width * 0.2;
+      config.y = height; // Sempre na base da tela
+      config.scale = Math.min(width / 1000, height / 700) * 0.8;
     } else {
-      // Desktop: personagem na direita
-      config.x = width * 0.85;
-      // Ajuste para sprite 500x500px
-      config.scale = Math.min(width / 1500, height / 1000) * 0.8;
-      // Posiciona para que o topo fique na mesma altura que o captain original
-      config.y = height - (500 * config.scale * 0.2); // Ajuste para manter o topo alinhado
+      // Desktop: personagem na esquerda, parte inferior
+      config.x = width * 0.15;
+      config.y = height; // Sempre na base da tela
+      config.scale = Math.min(width / 1280, height / 720) * 0.9;
     }
 
-    // Garante escala mínima e máxima para o sprite 500x500px
-    config.scale = Math.max(0.25, Math.min(config.scale, 1.0));
+    // Garante escala mínima e máxima
+    config.scale = Math.max(0.3, Math.min(config.scale, 1.2));
 
     return config;
   }
 
-  getBubbleConfig(width, height, isMobile, isTablet, overlordConfig) {
+  getBubbleConfig(width, height, isMobile, isTablet, captainConfig) {
     let config = {};
+
+    // Calcula a largura disponível à direita do personagem
+    const availableWidth = width - captainConfig.x - (captainConfig.x * 0.3);
     
     if (isMobile) {
-      // Mobile: bolha centralizada horizontalmente
-      config.width = Math.min(width * 0.8, 400);
+      // Mobile: bolha com espaçamento adequado
+      config.width = Math.min(availableWidth * 0.9, width * 0.65);
       config.height = height * 0.3;
-      config.x = (width - config.width) / 2; // Centraliza horizontalmente
+      config.x = captainConfig.x + (captainConfig.x * 0.25); // Espaçamento ajustado
       config.y = height * 0.4;
       config.cornerRadius = 15;
       config.borderWidth = 3;
     } else if (isTablet) {
-      // Tablet: bolha centralizada horizontalmente
-      config.width = Math.min(width * 0.7, 500);
+      // Tablet: bolha com espaçamento adequado
+      config.width = Math.min(availableWidth * 0.85, width * 0.6);
       config.height = height * 0.25;
-      config.x = (width - config.width) / 2; // Centraliza horizontalmente
+      config.x = captainConfig.x + (captainConfig.x * 0.35); // Espaçamento ajustado
       config.y = height * 0.35;
       config.cornerRadius = 18;
       config.borderWidth = 4;
     } else {
-      // Desktop: bolha centralizada horizontalmente
-      config.width = Math.min(width * 0.6, 600);
+      // Desktop: bolha com espaçamento adequado
+      config.width = Math.min(availableWidth * 0.8, width * 0.55);
       config.height = height * 0.22;
-      config.x = (width - config.width) / 2; // Centraliza horizontalmente
+      config.x = captainConfig.x + (captainConfig.x * 0.45); // Espaçamento ajustado
       config.y = height * 0.3;
       config.cornerRadius = 20;
       config.borderWidth = 4;
     }
 
-    // Garante dimensões mínimas
-    config.width = Math.max(250, config.width);
+    // Garante dimensões mínimas e que não saia da tela
+    config.width = Math.max(250, Math.min(config.width, width - config.x - 20));
     config.height = Math.max(100, config.height);
 
     // Ajusta posição Y para que a bolha não fique muito baixa

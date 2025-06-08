@@ -61,7 +61,7 @@ export default class MenuScene extends Phaser.Scene {
 
   createButtonText(x, y, text) {
     const btnText = this.add.text(x, y, text, {
-      fontSize: '35px',
+      fontSize: '50px',
       color: '#FFFFFF',
       fontFamily: 'Pixelify Sans',
       fontStyle: 'normal',

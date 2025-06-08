@@ -10,7 +10,7 @@ export class FirePlayer {
 
         // Controlar taxa de tiro (cooldown)
         this.lastFired = 0;
-        this.fireRate = 500; // milissegundos entre tiros
+        this.fireRate = 600; // milissegundos entre tiros
 
         // Criar a tecla de disparo
         this.fireKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);

@@ -22,7 +22,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     initBossVariables() {
         // Configurações gerais do boss
-        this.maxHealth = 125;
+        this.maxHealth = 150;
         this.health = this.maxHealth;
         this.isInvincible = true;
 
@@ -431,6 +431,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
         this.isDashing = true;
         this.setVelocity(0, 0);
+        this.setAlpha(1);
         this.scene.tweens.killTweensOf(this);
 
         let dashIndex = 0;
@@ -440,6 +441,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             if (dashIndex >= dashCount) {
                 this.isDashing = false;
                 this.setVelocity(0, 0);
+                this.setAlpha(1);
                 return;
             }
 
@@ -486,7 +488,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             return
         };
         console.log("A função TakeDamage, está sendo chamada! direitinho")
-
+        
+        this.scene.sound.play('boss_hit', { volume: 0.5 });
         this.health -= amount;
         this.health = Phaser.Math.Clamp(this.health, 0, this.maxHealth);
 
