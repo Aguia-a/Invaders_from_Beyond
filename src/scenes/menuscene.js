@@ -1,11 +1,14 @@
-export function pauseSistem(currentScene, newScene ) {
-  currentScene.scene.pause();              // Pausa a cena atual (ex: GameScene)
-  currentScene.scene.launch(`${newScene}`);  // Inicia o menu por cima
+export function pauseSistem(currentScene, newScene) {
+  currentScene.scene.pause(); // Pausa a cena atual (ex: GameScene)
+  currentScene.scene.launch(`${newScene}`); // Inicia o menu por cima
 }
 
 export default class MenuScene extends Phaser.Scene {
   constructor() {
     super({ key: 'menuscene' });
+
+    this.selectedIndex = 0;
+    this.menuButtons = [];
   }
 
   preload() {
@@ -14,22 +17,48 @@ export default class MenuScene extends Phaser.Scene {
     this.load.image('btnAudioOff', 'assets/btnAudioOnOff.png');
     this.load.image('btnRestart', 'assets/btnRestart.png');
     this.load.image('btnTelaInicial', 'assets/btnTelaInicial.png');
-    
   }
 
-  
   create() {
     this.createButtons();
+    this.input.keyboard.on('keydown', this.handleKeyInput, this);
   }
 
   createButtons() {
-    this.createBtnResume();
-    this.createBtnAudioOff();
-    this.createBtnRestart();
-    this.createBtnTelaInicial();
+    const centerX = this.cameras.main.centerX;
+    const startY = this.cameras.main.centerY - 150; // posição inicial
+    const spacing = 100;
+
+    this.menuButtons = [
+      this.createButton(centerX, startY + 0 * spacing, 'btnResume', 'Continuar', () => {
+        this.resumeGame();
+      }),
+      this.createButton(centerX, startY + 1 * spacing, 'btnRestart', 'Reiniciar', () => {
+        this.game.inGameMusic.stop();
+        this.scene.stop('Game');
+        this.scene.start('Game');
+        this.scene.stop();
+      }),
+      this.createButton(centerX, startY + 2 * spacing, 'btnAudioOff', 'Áudio', () => {
+        if (this.sound.mute) {
+          this.sound.setMute(false);
+          console.log('Áudio ligado');
+        } else {
+          this.sound.setMute(true);
+          console.log('Áudio desligado');
+        }
+      }),
+      this.createButton(centerX, startY + 3 * spacing, 'btnTelaInicial', 'Tela Inicial', () => {
+        this.game.inGameMusic.stop();
+        this.scene.stop('Game');
+        this.scene.start('Start');
+        this.scene.stop();
+      }),
+    ];
+
+    this.highlightSelected();
   }
 
-  // Função para criar textos estilizados de botão
   createButtonText(x, y, text) {
     const btnText = this.add.text(x, y, text, {
       fontSize: '35px',
@@ -40,100 +69,53 @@ export default class MenuScene extends Phaser.Scene {
       stroke: '#000000',
       strokeThickness: 0,
     }).setOrigin(0.5);
-    // Sombra para melhor legibilidade
-    btnText.setShadow(2, 2, '#000000', 2, true, true);
 
+    btnText.setShadow(2, 2, '#000000', 2, true, true);
     return btnText;
   }
 
-  createBtnResume() {
-    const btnWidth = 210;
-    const btnHeight = 90;
-    const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY - 200;
-
-    const btn = this.add.image(centerX, centerY, 'btnResume').setInteractive();
-    btn.setDisplaySize(btnWidth, btnHeight);
+  createButton(x, y, texture, label, callback) {
+    const btn = this.add.image(x, y, texture)
+      .setInteractive()
+      .setDisplaySize(210, 90)
+      .setScale(0.6); // menor por padrão
 
     btn.on('pointerover', () => btn.setTint(0xaaaaaa));
     btn.on('pointerout', () => btn.clearTint());
+    btn.on('pointerdown', callback);
 
-    btn.on('pointerdown', () => {
-      this.scene.stop();
-      this.scene.resume('Game');
-    });
+    const text = this.createButtonText(x, y, label);
+    text.setScale(0.6); // mesmo tamanho do botão inicialmente
 
-    this.createButtonText(centerX, centerY, 'Continuar');
+    btn.label = text;
+    return btn;
   }
 
-  createBtnAudioOff() {
-    const btnWidth = 210;
-    const btnHeight = 90;
-    const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY + 0;
-
-    const btn = this.add.image(centerX, centerY, 'btnAudioOff').setInteractive();
-    btn.setDisplaySize(btnWidth, btnHeight);
-
-    btn.on('pointerover', () => btn.setTint(0xaaaaaa));
-    btn.on('pointerout', () => btn.clearTint());
-
-    btn.on('pointerdown', () => {
-      console.log('Botão áudio desligado clicado');
-      if (this.sound.mute) {
-        this.sound.setMute(false);
-        console.log('Áudio ligado');
-      } else {
-        this.sound.setMute(true);
-        console.log('Áudio desligado');
-      }
+  highlightSelected() {
+    this.menuButtons.forEach((btn, index) => {
+      const scale = (index === this.selectedIndex) ? 0.8 : 0.6;
+      btn.setScale(scale);
+      btn.label.setScale(scale);
     });
-
-    this.createButtonText(centerX, centerY, 'Áudio');
   }
 
-  createBtnRestart() {
-    const btnWidth = 210;
-    const btnHeight = 90;
-    const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY - 100;
-
-    const btn = this.add.image(centerX, centerY, 'btnRestart').setInteractive();
-    btn.setDisplaySize(btnWidth, btnHeight);
-
-    btn.on('pointerover', () => btn.setTint(0xaaaaaa));
-    btn.on('pointerout', () => btn.clearTint());
-
-    btn.on('pointerdown', () => {
-      this.game.inGameMusic.stop()
-      this.scene.stop('Game');
-      this.scene.start('Game');
-      this.scene.stop();
-    });
-
-    this.createButtonText(centerX, centerY, 'Reiniciar');
+  resumeGame() {
+    this.scene.stop();
+    this.scene.resume('Game');
   }
 
-  createBtnTelaInicial() {
-    const btnWidth = 210;
-    const btnHeight = 90;
-    const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY + 100;
-
-    const btn = this.add.image(centerX, centerY, 'btnTelaInicial').setInteractive();
-    btn.setDisplaySize(btnWidth, btnHeight);
-
-    btn.on('pointerover', () => btn.setTint(0xaaaaaa));
-    btn.on('pointerout', () => btn.clearTint());
-
-    btn.on('pointerdown', () => {
-      console.log('Botão tela inicial clicado');
-      this.game.inGameMusic.stop();
-      this.scene.stop('Game');
-      this.scene.start('Start');
-      this.scene.stop();
-    });
-
-    this.createButtonText(centerX, centerY, 'Tela Inicial');
+  handleKeyInput(event) {
+    if (event.code === 'ArrowDown') {
+      this.selectedIndex = (this.selectedIndex + 1) % this.menuButtons.length;
+      this.highlightSelected();
+    } else if (event.code === 'ArrowUp') {
+      this.selectedIndex = (this.selectedIndex - 1 + this.menuButtons.length) % this.menuButtons.length;
+      this.highlightSelected();
+    } else if (event.code === 'Enter') {
+      const selectedBtn = this.menuButtons[this.selectedIndex];
+      selectedBtn.emit('pointerdown');
+    } else if (event.code === 'Escape') {
+      this.resumeGame(); // ESC também continua o jogo
+    }
   }
 }

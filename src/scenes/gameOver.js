@@ -5,14 +5,21 @@ export default class GameOverScene extends Phaser.Scene {
         super({ key: 'gameOverScene' });
     }
 
+    preload() {
+        this.load.audio('gameOverSound', 'assets/gameOverSound.mp3')
+    }
+
     create() {
-        console.log("Moreuu")
         const { width, height } = this.cameras.main;
+
+        this.gameOverSound = this.sound.add('gameOverSound')
+        this.gameOverSound.play()
+
 
         //Fundo Escuro
         this.add.rectangle(0, 0, width * 2, height * 2, 0x000000, 0.5)
-        .setOrigin(0)
-        .setDepth(10);
+            .setOrigin(0)
+            .setDepth(10);
 
         // Texto "Game Over"
         const gameOverText = this.add.image(width / 2, height / 2, 'gameOverText')

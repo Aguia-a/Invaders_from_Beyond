@@ -140,7 +140,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     fase1(time, delta) {
         if (!this.fase1Iniciada) {
-            console.log("O boss entrou na fase 1");
+            this.scene.sound.add('bossMainRoar').play();
             this.fase1Iniciada = true;
             BossEffects.fase1EfeitoMudanca(this.scene, this);
             this.removeClone(true);
@@ -162,7 +162,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     fase2(time, delta) {
         if (!this.fase2Iniciada) {
-            console.log("O boss entrou na fase 2");
+            this.scene.bossRoar.play();
             this.fase2Iniciada = true;
             BossEffects.fase2EfeitoMudanca(this.scene, this);
             this.removeClone(true);
@@ -210,7 +210,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     fase3(time, delta) {
         if (!this.fase3Iniciada) {
-            console.log("O boss entrou na fase 3");
+            this.scene.bossRoar.play();
             this.fase3Iniciada = true;
             this.waveOffset = 0;
             this.verticalDirection = 1;
@@ -298,6 +298,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
         DefaultAttack1Object.body.setVelocity(0, 0); // Começa parado
 
         this.bossProjectiles.add(DefaultAttack1Object);
+        this.scene.shootBoss02.play();
 
         // Após um pequeno atraso, começa a cai
 
@@ -339,6 +340,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             orb.body.setVelocity(orb.speedX, orb.speedY);
 
             this.bossProjectiles.add(orb);
+            this.scene.shootBoss.play();
         });
     }
 
@@ -359,7 +361,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
                 const spike = this.scene.physics.add.sprite(x, y, 'bossProjectile');
                 spike.play('bossProjectileAnim');
-                
+
                 spike.setVelocityY(specialAttack1Velocity);
                 spike.body.setAllowGravity(false);
                 spike.setScale(0.2);
@@ -368,6 +370,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
                 spike.speedY = specialAttack1Velocity;
 
                 this.bossProjectiles.add(spike);
+
             });
         }
     }
@@ -478,9 +481,10 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     takeDamage(amount) {
-        if (this.isInvincible){
-        console.log("Boss, está invencivel!")    
-        return};
+        if (this.isInvincible) {
+            console.log("Boss, está invencivel!")
+            return
+        };
         console.log("A função TakeDamage, está sendo chamada! direitinho")
 
         this.health -= amount;
@@ -514,6 +518,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     teleport(time) {
         this.lastTeleport = time;
+        this.scene.bossTeleport.play();
 
         this.scene.tweens.add({
             targets: this,
@@ -735,25 +740,25 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
 
     cleanup() {
-    // Destrói todos os projéteis do boss
-    if (this.bossProjectiles) {
-        this.bossProjectiles.clear(true, true);
-    }
+        // Destrói todos os projéteis do boss
+        if (this.bossProjectiles) {
+            this.bossProjectiles.clear(true, true);
+        }
 
-    // Remove o listener update do clone, se existir
-    if (this.cloneUpdateCallback) {
-        this.scene.events.off('update', this.cloneUpdateCallback);
-        this.cloneUpdateCallback = null;
-    }
+        // Remove o listener update do clone, se existir
+        if (this.cloneUpdateCallback) {
+            this.scene.events.off('update', this.cloneUpdateCallback);
+            this.cloneUpdateCallback = null;
+        }
 
-    // Destroi o clone, se existir
-    if (this.clone) {
-        this.clone.destroy();
-        this.clone = null;
-    }
+        // Destroi o clone, se existir
+        if (this.clone) {
+            this.clone.destroy();
+            this.clone = null;
+        }
 
-    // Para todos os tweens associados ao boss
-    this.scene.tweens.killTweensOf(this);
-}
+        // Para todos os tweens associados ao boss
+        this.scene.tweens.killTweensOf(this);
+    }
 
 }

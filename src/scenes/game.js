@@ -15,10 +15,6 @@ import {
 } from './backgroundSystem.js';
 
 
-
-
-
-
 export class Game extends Phaser.Scene {
     constructor() {
         super({ key: 'Game' });
@@ -34,15 +30,22 @@ export class Game extends Phaser.Scene {
         this.load.image('boss', 'assets/boss.spaceship.png');
         this.load.image('heartFull', 'assets/player.full.heart.png');
         this.load.image('heartEmpty', 'assets/player.empty.heart.png');
-        this.load.audio('bgSound', 'assets/inGameSong.mp3');
-        this.load.audio('hitSound', 'assets/impactSound01.mp3');
-        this.load.audio('hitSoundEnemy', 'assets/impactSound02.mp3');
         this.load.image('enemyAttack', 'assets/simpleAttack.png');
         this.load.image('bossClone', 'assets/boss.spaceship.png');
         this.load.image('orb', 'assets/simpleAttack.png');
         this.load.image('wallProjectile', 'assets/wall-projectile.png');
         this.load.image('flash', 'assets/flash_particle.png');
         this.load.image('gameOverText', 'assets/gameOverText.png');
+
+        this.load.audio('bgSound', 'assets/inGameSong.mp3');
+        this.load.audio('hitSound', 'assets/impactSound01.mp3');
+        this.load.audio('hitSoundEnemy', 'assets/impactSound02.mp3');
+        this.load.audio('bossRoar', 'assets/bossRoar.mp3')
+        this.load.audio('bossMainRoar', 'assets/bossMainRoar.mp3')
+        this.load.audio('shootBoss', 'assets/shootBoss.mp3')
+        this.load.audio('shootBoss02', 'assets/shootBoss02.mp3')
+        this.load.audio('bossTeleport', 'assets/bossTeleport.mp3')
+
 
         this.load.spritesheet('bossProjectile', 'assets/specialProjectile.png', {
             frameWidth: 169,
@@ -68,7 +71,7 @@ export class Game extends Phaser.Scene {
 
         setupBackgroundSystem(this);
 
-        this.player = new Player(this, 640, 660, selectedShip);
+        this.player = new Player(this, 640, 620, selectedShip);
 
         this.firePlayer = new FirePlayer(this, this.player.sprite);
 
@@ -78,13 +81,27 @@ export class Game extends Phaser.Scene {
         this.hitSound = this.sound.add("hitSound");
         this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 });
 
+        this.bossRoar = this.sound.add('bossRoar', { volume: 0.9 })
+        this.bossMainRoar = this.sound.add('bossMainRoar')
+        this.shootBoss = this.sound.add('shootBoss', { volume: 0.8 })
+        this.shootBoss02 = this.sound.add('shootBoss02', { volume: 0.8 })
+        this.bossTeleport = this.sound.add('bossTeleport',  { volume: 1.5 })
+        
+
         this.normalEnemies = this.physics.add.group();
         this.enemyBullets = this.physics.add.group();
 
         this.level = 1;
         this.enemyDirection = 3;
 
-        this.levelText = this.add.text(1120, 680, 'Nível: 1', { fontSize: '28px', fill: '#fff' });
+        this.levelText = this.add.text(0, 0, 'Nível: 1', {
+            fontSize: '28px',
+            fill: '#fff'
+        }).setScrollFactor(0);
+
+        this.updateLevelTextPosition();
+
+        this.scale.on('resize', this.updateLevelTextPosition, this);
 
         this.boss = null;
 
@@ -189,6 +206,7 @@ export class Game extends Phaser.Scene {
             this.levelText.setText('Nível: ' + this.level);
             this.createEnemiesForLevel(this.level);
         }
+
     }
 
     destroyBoss() {
@@ -232,5 +250,17 @@ export class Game extends Phaser.Scene {
 
         this.physics.add.overlap(this.firePlayer.bullets, this.normalEnemies, this.destroyEnemy, null, this);
         this.physics.add.overlap(this.player.sprite, this.enemyBullets, this.hitPlayer, null, this);
+    }
+
+    updateLevelTextPosition() {
+        const screenWidth = this.scale.width;
+        const screenHeight = this.scale.height;
+
+        const marginRight = screenWidth * 0.10; // 10% da largura da tela pela direita
+        const marginBottom = screenHeight * 0.08; // 5% da altura de baixo
+
+        // Define x considerando a largura do texto para alinhar à direita com margem
+        this.levelText.x = screenWidth - marginRight - this.levelText.width;
+        this.levelText.y = screenHeight - marginBottom - this.levelText.height;
     }
 }
