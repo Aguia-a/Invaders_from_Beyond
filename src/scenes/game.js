@@ -125,40 +125,45 @@ export class Game extends Phaser.Scene {
     }
 
     createEnemiesForLevel(level) {
-        this.normalEnemies.clear(true, true);
-
-        if (level === 5) {
-            this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
-            this.checkCollisions();
-
-            this.boss.on('damaged', (currentHealth) => {
-                this.BossInterface.updateHealth(currentHealth, this.boss.maxHealth);
-            });
-        } else {
-            let numEnemies;
-            const pattern = (level - 1) % 5;
-            if (pattern === 0) numEnemies = 3;
-            else if (pattern === 1) numEnemies = 6;
-            else if (pattern === 2) numEnemies = 10;
-            else numEnemies = 15;
-
-            const rows = Math.ceil((Math.sqrt(8 * numEnemies + 1) - 1) / 2);
-            const startY = 80;
-
-            for (let row = 0; row < rows; row++) {
-                const enemiesInRow = row + 1;
-                const y = startY + (rows - 1 - row) * 80;
-                const startX = 640 - (enemiesInRow - 1) * 50;
-
-                for (let i = 0; i < enemiesInRow; i++) {
-                    const x = startX + i * 100;
-                    const enemy = new EnemyNormal(this, x, y);
-                    this.normalEnemies.add(enemy);
-                }
-            }
-            this.checkCollisions();
-        }
+    if (level === 11) {
+        pauseSistem(this, 'demoEnd');
+        return;  // Sai da função para não criar inimigos
     }
+
+    this.normalEnemies.clear(true, true);
+
+    if (level === 10) {
+        this.boss = new Boss(this, this.scale.width / 2, this.scale.height / 2 - 100);
+        this.checkCollisions();
+
+        this.boss.on('damaged', (currentHealth) => {
+            this.BossInterface.updateHealth(currentHealth, this.boss.maxHealth);
+        });
+    } else {
+        let numEnemies;
+        const pattern = (level - 1) % 5;
+        if (pattern === 0) numEnemies = 3;
+        else if (pattern === 1) numEnemies = 6;
+        else if (pattern === 2) numEnemies = 10;
+        else numEnemies = 15;
+
+        const rows = Math.ceil((Math.sqrt(8 * numEnemies + 1) - 1) / 2);
+        const startY = 80;
+
+        for (let row = 0; row < rows; row++) {
+            const enemiesInRow = row + 1;
+            const y = startY + (rows - 1 - row) * 80;
+            const startX = 640 - (enemiesInRow - 1) * 50;
+
+            for (let i = 0; i < enemiesInRow; i++) {
+                const x = startX + i * 100;
+                const enemy = new EnemyNormal(this, x, y);
+                this.normalEnemies.add(enemy);
+            }
+        }
+        this.checkCollisions();
+    }
+}
 
     update(time, delta) {
         this.normalEnemies.children.iterate(enemy => {
