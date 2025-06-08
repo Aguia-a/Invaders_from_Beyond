@@ -73,7 +73,7 @@ export class Game extends Phaser.Scene {
 
         setupBackgroundSystem(this);
 
-        this.player = new Player(this, 640, 620, selectedShip);
+        this.player = new Player(this, this.scale.width / 2, 700, selectedShip);
 
         this.firePlayer = new FirePlayer(this, this.player.sprite);
 
