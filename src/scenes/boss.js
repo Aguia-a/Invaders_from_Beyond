@@ -486,7 +486,8 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
             return
         };
         console.log("A função TakeDamage, está sendo chamada! direitinho")
-
+        
+        this.scene.sound.play('boss_hit', { volume: 0.5 });
         this.health -= amount;
         this.health = Phaser.Math.Clamp(this.health, 0, this.maxHealth);
 

@@ -66,8 +66,8 @@ export class SelectShip extends Phaser.Scene {
         });
 
         this.instructionText = this.add.text(centerX, 580, 'Selecione uma nave para continuar', {
-            fontFamily: 'Futura Display',
-            fontSize: '24px',
+            fontFamily: 'Pixelify Sans',
+            fontSize: '32px',
             color: '#ffffff'
         }).setOrigin(0.5);
 

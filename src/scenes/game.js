@@ -45,6 +45,8 @@ export class Game extends Phaser.Scene {
         this.load.audio('shootBoss', 'assets/shootBoss.mp3')
         this.load.audio('shootBoss02', 'assets/shootBoss02.mp3')
         this.load.audio('bossTeleport', 'assets/bossTeleport.mp3')
+        this.load.audio('boss_hit', 'assets/boss_hit.mp3');
+
 
 
         this.load.spritesheet('bossProjectile', 'assets/specialProjectile.png', {
