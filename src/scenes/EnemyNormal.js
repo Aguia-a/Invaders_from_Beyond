@@ -12,6 +12,10 @@ export class EnemyNormal extends Phaser.Physics.Arcade.Sprite {
 
         this.speed = 3;
         this.canShoot = true;
+        this.shootCooldown = 2500; // Cooldown em ms configurado no construtor
+
+        //Garante que cada inimigo comece a atirar em um momento diferente, para evitar eles atirar todos de uma vez
+        this.lastShotTime = this.scene.time.now + Phaser.Math.Between(0, 2000);
     }
 
     update(player) {
@@ -31,10 +35,26 @@ export class EnemyNormal extends Phaser.Physics.Arcade.Sprite {
 
     // Decide se irá atirar, e qual tipo de ataque chamar
     tryToShoot(player) {
-        if (this.canShoot && Phaser.Math.Between(0, 1000) < 1) {
-            this.attack1(player);
+    const currentTime = this.scene.time.now;
+
+    // Só tenta atirar se não estiver em cooldown
+    if (!this.lastShotTime || currentTime - this.lastShotTime > this.shootCooldown) {
+        this.lastShotTime = currentTime; // Reinicia o cooldown aqui, independentemente do resultado
+
+        const shouldShoot = Phaser.Math.Between(0, 100);
+        if (shouldShoot < 50) {
+            const attackRoll = Phaser.Math.Between(0, 100);
+
+            switch (true) {
+                case attackRoll < 100:
+                    this.attack1(player); // 100% por enquanto
+                    break;
+                // Outros ataques podem ser adicionados aqui
+            }
         }
+        // Se não passou no shouldShoot, ele apenas não atira e entra em cooldown mesmo assim
     }
+}
 
     // Ataque padrão: projétil em direção ao jogador
     attack1(player) {
