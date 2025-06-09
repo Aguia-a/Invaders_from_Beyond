@@ -93,7 +93,7 @@ export class Game extends Phaser.Scene {
         this.normalEnemies = this.physics.add.group();
         this.enemyBullets = this.physics.add.group();
 
-        this.level = 10;
+        this.level = 1;
         this.enemyDirection = 3;
 
         this.levelText = this.add.text(0, 0, 'Nível: 1', {
