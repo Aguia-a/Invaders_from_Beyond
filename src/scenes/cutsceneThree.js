@@ -11,25 +11,33 @@ export class CutsceneThree extends Phaser.Scene {
   }
 
   create() {
+    const som = this.sound.add('digitandoSom');
+    som.play({ seek: 2, volume: 0.5 });
+
+    // Para parar após 1 segundo:
+    this.time.delayedCall(3000, () => {
+      som.stop();
+    });
+
     // Fundo tipo "cover"
     this.background = this.add.image(0, 0, 'background');
     this.scaleBackgroundToCover(this.background);
 
     // Configuração das estrelas
     this.stars = this.add.tileSprite(0, 0, this.scale.width, this.scale.height, 'stars')
-        .setOrigin(0)
-        .setScrollFactor(0)
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setAlpha(1);
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(1);
 
     // Tween para opacidade pulsante das estrelas
     this.tweens.add({
-        targets: this.stars,
-        alpha: { from: 0.5, to: 1 },
-        duration: 2000,
-        ease: 'Sine.easeInOut',
-        yoyo: true,
-        repeat: -1
+      targets: this.stars,
+      alpha: { from: 0.5, to: 1 },
+      duration: 2000,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1
     });
 
     // Configurações responsivas baseadas no tamanho da tela
@@ -37,17 +45,19 @@ export class CutsceneThree extends Phaser.Scene {
 
     // Inicializa variáveis para o efeito typewriter
     // Mensagem do overlord
-    this.currentMessage = 
-    '[Transmissão Invasora]\n' +
-    '— Hostilidade confirmada.\n' +	
-    'Protocolo de conversão planetária em andamento...\n' +
-    'Unidade designada para observar: Nova Kusko.\n';
+    this.currentMessage =
+      '[Transmissão Invasora]\n' +
+      '— Hostilidade confirmada.\n' +
+      'Iniciando protocolo de ondas...\n' +
+      'Observaremos sua agonia com...\n' +
+      'interesse.\n';
 
     this.currentIndex = 0;
     this.typeNextChar();
 
     // Inicia a próxima cena (CutsceneFour) quando ENTER for pressionado
     this.input.keyboard.once('keydown-ENTER', () => {
+      som.stop();
       this.scene.start('CutsceneFour');
     });
 
@@ -58,14 +68,14 @@ export class CutsceneThree extends Phaser.Scene {
   setupResponsiveLayout() {
     const width = this.scale.width;
     const height = this.scale.height;
-    
+
     // Determina se é mobile, tablet ou desktop
     const isMobile = width < 768;
     const isTablet = width >= 768 && width < 1024;
 
     // Configurações do overlord - sempre na parte inferior direita
     let overlordConfig = this.getOverlordConfig(width, height, isMobile, isTablet);
-    
+
     // Remove overlord anterior se existir
     if (this.overlord) {
       this.overlord.destroy();
@@ -91,20 +101,20 @@ export class CutsceneThree extends Phaser.Scene {
     this.bubble = this.add.graphics();
     this.bubble.fillStyle(0xFFFFFF, 0.95);
     this.bubble.lineStyle(bubbleConfig.borderWidth, 0x00FF00, 1);
-    
+
     // Desenha apenas a bolha retangular com cantos arredondados
     this.bubble.fillRoundedRect(
-      bubbleConfig.x, 
-      bubbleConfig.y, 
-      bubbleConfig.width, 
-      bubbleConfig.height, 
+      bubbleConfig.x,
+      bubbleConfig.y,
+      bubbleConfig.width,
+      bubbleConfig.height,
       bubbleConfig.cornerRadius
     );
     this.bubble.strokeRoundedRect(
-      bubbleConfig.x, 
-      bubbleConfig.y, 
-      bubbleConfig.width, 
-      bubbleConfig.height, 
+      bubbleConfig.x,
+      bubbleConfig.y,
+      bubbleConfig.width,
+      bubbleConfig.height,
       bubbleConfig.cornerRadius
     );
 
@@ -157,7 +167,7 @@ export class CutsceneThree extends Phaser.Scene {
 
   getBubbleConfig(width, height, isMobile, isTablet, overlordConfig) {
     let config = {};
-    
+
     if (isMobile) {
       // Mobile: bolha centralizada horizontalmente
       config.width = Math.min(width * 0.8, 400);
@@ -220,7 +230,7 @@ export class CutsceneThree extends Phaser.Scene {
   handleResize() {
     // Reconfigura o layout quando a tela é redimensionada
     this.setupResponsiveLayout();
-    
+
     // Reinicia o efeito typewriter se necessário
     if (this.messageText) {
       this.currentIndex = 0;

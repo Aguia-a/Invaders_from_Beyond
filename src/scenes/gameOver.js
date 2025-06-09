@@ -12,7 +12,7 @@ export default class GameOverScene extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
-        this.gameOverSound = this.sound.add('gameOverSound')
+        this.gameOverSound = this.sound.add('gameOverSound', {volume:0.3})
         this.gameOverSound.play()
 
 

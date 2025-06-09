@@ -8,28 +8,39 @@ export class CutsceneTwo extends Phaser.Scene {
     this.load.image('background', 'assets/startWallpaper.png');
     this.load.image('stars', 'assets/purpleStars.png');
     this.load.image('captain', 'assets/kusko.chat.sprite.png');
+
+    this.load.audio('digitandoSom', 'assets/digitandoSom.mp3')
   }
 
   create() {
+
+    const som = this.sound.add('digitandoSom');
+    som.play({ seek: 2, volume: 0.5 });
+
+    // Para parar após 1 segundo:
+    this.time.delayedCall(4000, () => {
+      som.stop();
+    });
+
     // Fundo tipo "cover"
     this.background = this.add.image(0, 0, 'background');
     this.scaleBackgroundToCover(this.background);
 
     // Configuração das estrelas
     this.stars = this.add.tileSprite(0, 0, this.scale.width, this.scale.height, 'stars')
-        .setOrigin(0)
-        .setScrollFactor(0)
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setAlpha(1);
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(1);
 
     // Tween para opacidade pulsante das estrelas
     this.tweens.add({
-        targets: this.stars,
-        alpha: { from: 0.5, to: 1 },
-        duration: 2000,
-        ease: 'Sine.easeInOut',
-        yoyo: true,
-        repeat: -1
+      targets: this.stars,
+      alpha: { from: 0.5, to: 1 },
+      duration: 2000,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1
     });
 
     // Configurações responsivas baseadas no tamanho da tela
@@ -37,17 +48,18 @@ export class CutsceneTwo extends Phaser.Scene {
 
     // Inicializa variáveis para o efeito typewriter
     // Mensagem do capitão
-    this.currentMessage = 
-    '[Comandante Nova Kusko]\n' +
-    'Identifique-se.\n' +
-    'Esta é uma zona sob proteção da Federação da Terra.\n' +
-    'Aproxime-se com intenções diplomáticas ou será considerado hostil.\n';
+    this.currentMessage =
+      '[Comandante]\n' +
+      'Identifique-se.\n' +
+      'Esta é uma zona sob proteção da Federação da Terra.\n' +
+      'Aproxime-se com intenções diplomáticas ou será considerado hostil.\n';
 
     this.currentIndex = 0;
     this.typeNextChar();
 
     // Inicia a próxima cena (CutsceneThree) quando ENTER for pressionado
     this.input.keyboard.once('keydown-ENTER', () => {
+      som.stop();
       this.scene.start('CutsceneThree');
     });
 
@@ -58,14 +70,14 @@ export class CutsceneTwo extends Phaser.Scene {
   setupResponsiveLayout() {
     const width = this.scale.width;
     const height = this.scale.height;
-    
+
     // Determina se é mobile, tablet ou desktop
     const isMobile = width < 768;
     const isTablet = width >= 768 && width < 1024;
 
     // Configurações do capitão - sempre na parte inferior
     let captainConfig = this.getCaptainConfig(width, height, isMobile, isTablet);
-    
+
     // Remove capitão anterior se existir
     if (this.captain) {
       this.captain.destroy();
@@ -91,20 +103,20 @@ export class CutsceneTwo extends Phaser.Scene {
     this.bubble = this.add.graphics();
     this.bubble.fillStyle(0xFFFFFF, 0.95);
     this.bubble.lineStyle(bubbleConfig.borderWidth, 0x00FF00, 1);
-    
+
     // Desenha apenas a bolha retangular com cantos arredondados
     this.bubble.fillRoundedRect(
-      bubbleConfig.x, 
-      bubbleConfig.y, 
-      bubbleConfig.width, 
-      bubbleConfig.height, 
+      bubbleConfig.x,
+      bubbleConfig.y,
+      bubbleConfig.width,
+      bubbleConfig.height,
       bubbleConfig.cornerRadius
     );
     this.bubble.strokeRoundedRect(
-      bubbleConfig.x, 
-      bubbleConfig.y, 
-      bubbleConfig.width, 
-      bubbleConfig.height, 
+      bubbleConfig.x,
+      bubbleConfig.y,
+      bubbleConfig.width,
+      bubbleConfig.height,
       bubbleConfig.cornerRadius
     );
 
@@ -154,7 +166,7 @@ export class CutsceneTwo extends Phaser.Scene {
 
     // Calcula a largura disponível à direita do personagem
     const availableWidth = width - captainConfig.x - (captainConfig.x * 0.3);
-    
+
     if (isMobile) {
       // Mobile: bolha com espaçamento adequado
       config.width = Math.min(availableWidth * 0.9, width * 0.65);
@@ -217,7 +229,7 @@ export class CutsceneTwo extends Phaser.Scene {
   handleResize() {
     // Reconfigura o layout quando a tela é redimensionada
     this.setupResponsiveLayout();
-    
+
     // Reinicia o efeito typewriter se necessário
     if (this.messageText) {
       this.currentIndex = 0;

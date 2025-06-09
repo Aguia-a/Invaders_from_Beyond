@@ -22,7 +22,7 @@ export default class Boss extends Phaser.Physics.Arcade.Sprite {
 
     initBossVariables() {
         // Configurações gerais do boss
-        this.maxHealth = 150;
+        this.maxHealth = 5;
         this.health = this.maxHealth;
         this.isInvincible = true;
 
