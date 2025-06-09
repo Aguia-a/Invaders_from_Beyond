@@ -43,7 +43,7 @@ export class EnemyNormal extends Phaser.Physics.Arcade.Sprite {
         this.lastShotTime = currentTime; // Reinicia o cooldown aqui, independentemente do resultado
 
         const shouldShoot = Phaser.Math.Between(0, 100);
-        if (shouldShoot < 15) { //CHANCE DO DISPARO ACONTECER
+        if (shouldShoot < 70) { //CHANCE DO DISPARO ACONTECER
             const attackRoll = Phaser.Math.Between(0, 100); // ESCOLHE QUAL TIPO DE DISPARO SERÁ USADO
 
             switch (true) {

@@ -5,6 +5,7 @@ export default class DemoEnd extends Phaser.Scene {
 
     preload() {
         this.load.audio('demoEndSound', 'assets/gameOverSound.mp3'); 
+        this.load.image("fimDaDemo", 'assets/fimDaDemo.png')
     }
 
     createButtonText(x, y, text, fontSize = '40px', color = '#FFFFFF', strokeThickness = 0) {
@@ -25,7 +26,7 @@ export default class DemoEnd extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
 
-        this.demoEndSound = this.sound.add('demoEndSound');
+        this.demoEndSound = this.sound.add('demoEndSound', {volume: 0.3});
         this.demoEndSound.play();
 
         // Fundo escuro semi-transparente
@@ -34,8 +35,11 @@ export default class DemoEnd extends Phaser.Scene {
             .setDepth(10);
 
         // Texto principal: Demo Acabou! com controle de variáveis
-        const demoEndText = this.createButtonText(width / 2, height / 2 - 20, 'Demo Acabou!', '40px', '#FFFFFF', 0);
-        demoEndText.setDepth(11).setAlpha(0);
+        const demoEndText = this.add.image(width / 2, height / 2, 'fimDaDemo')
+            .setOrigin(0.5)
+            .setDepth(11)
+            .setScale(0.3)
+            .setAlpha(0);
 
         // Texto secundário: Obrigado por jogar! com controle de variáveis
         const thanksText = this.createButtonText(width / 2, height / 2 + 40, 'Obrigado por jogar!', '24px', '#FFFFFF', 0);
