@@ -10,16 +10,20 @@ export class CutsceneOne extends Phaser.Scene {
     this.load.image('overlord', 'assets/overlordShadow.png');
 
     this.load.audio('digitandoSom', 'assets/digitandoSom.mp3')
+    this.load.audio('Alien_audio', 'assets/Alien_audio.mp3')
   }
 
   create() {
-    // Som
-    const som = this.sound.add('digitandoSom');
-    som.play({ seek: 2, volume: 0.5 });
+    // Som1
+    const tecla = this.sound.add('digitandoSom');
+    tecla.play({ seek: 2, volume: 0.1 });
+    const Alien_audio = this.sound.add('Alien_audio');
+    Alien_audio.play({ volume: 0.8 });
 
     // Para parar após 1 segundo:
     this.time.delayedCall(4000, () => {
-      som.stop();
+      tecla.stop();
+      Alien_audio.stop();
     });
 
 
@@ -61,7 +65,8 @@ export class CutsceneOne extends Phaser.Scene {
 
     // Inicia a próxima cena (CutsceneTwo) quando ENTER for pressionado
     this.input.keyboard.once('keydown-ENTER', () => {
-      som.stop();
+      tecla.stop();
+      Alien_audio.stop();
       this.scene.start('CutsceneTwo');
     });
 
@@ -127,7 +132,7 @@ export class CutsceneOne extends Phaser.Scene {
 
     // Cria o objeto de texto dentro da bolha
     this.messageText = this.add.text(textConfig.x, textConfig.y, '', {
-      font: `${textConfig.fontSize}px Arial, sans-serif`,
+      font: `${textConfig.fontSize + 2}px Pixelify Sans`,
       fill: '#000000',
       lineSpacing: textConfig.lineSpacing,
       wordWrap: {

@@ -97,7 +97,8 @@ export class Game extends Phaser.Scene {
         this.enemyDirection = 3;
 
         this.levelText = this.add.text(0, 0, 'Nível: 1', {
-            fontSize: '28px',
+            fontSize: '40px',
+            fontFamily: 'Pixelify Sans',
             fill: '#fff'
         }).setScrollFactor(0);
 

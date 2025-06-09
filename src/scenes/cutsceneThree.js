@@ -8,17 +8,21 @@ export class CutsceneThree extends Phaser.Scene {
     this.load.image('background', 'assets/startWallpaper.png');
     this.load.image('stars', 'assets/purpleStars.png');
     this.load.image('overlord', 'assets/overlordShadow.png');
+    this.load.audio('Alien_audio', 'assets/Alien_audio.mp3')
   }
 
   create() {
-    const som = this.sound.add('digitandoSom');
-    som.play({ seek: 2, volume: 0.5 });
+    // Som1
+    const tecla = this.sound.add('digitandoSom');
+    tecla.play({ seek: 2, volume: 0.1 });
+    const Alien_audio = this.sound.add('Alien_audio');
+    Alien_audio.play({ volume: 0.8 });
 
     // Para parar após 1 segundo:
-    this.time.delayedCall(3000, () => {
-      som.stop();
+    this.time.delayedCall(4000, () => {
+      tecla.stop();
+      Alien_audio.stop();
     });
-
     // Fundo tipo "cover"
     this.background = this.add.image(0, 0, 'background');
     this.scaleBackgroundToCover(this.background);
@@ -57,7 +61,8 @@ export class CutsceneThree extends Phaser.Scene {
 
     // Inicia a próxima cena (CutsceneFour) quando ENTER for pressionado
     this.input.keyboard.once('keydown-ENTER', () => {
-      som.stop();
+      tecla.stop();
+      Alien_audio.stop();
       this.scene.start('CutsceneFour');
     });
 
@@ -122,8 +127,8 @@ export class CutsceneThree extends Phaser.Scene {
     const textConfig = this.getTextConfig(width, height, isMobile, bubbleConfig);
 
     // Cria o objeto de texto dentro da bolha
-    this.messageText = this.add.text(textConfig.x, textConfig.y, '', {
-      font: `${textConfig.fontSize}px Arial, sans-serif`,
+     this.messageText = this.add.text(textConfig.x, textConfig.y, '', {
+      font: `${textConfig.fontSize + 2}px Pixelify Sans`,
       fill: '#000000',
       lineSpacing: textConfig.lineSpacing,
       wordWrap: {

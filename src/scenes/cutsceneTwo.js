@@ -9,17 +9,21 @@ export class CutsceneTwo extends Phaser.Scene {
     this.load.image('stars', 'assets/purpleStars.png');
     this.load.image('captain', 'assets/kusko.chat.sprite.png');
 
-    this.load.audio('digitandoSom', 'assets/digitandoSom.mp3')
+    this.load.audio('digitandoSom', 'assets/digitandoSom.mp3');
+    this.load.audio('Human_audio', 'assets/Human_audio.mp3');
   }
 
   create() {
 
-    const som = this.sound.add('digitandoSom');
-    som.play({ seek: 2, volume: 0.5 });
+    const tecla = this.sound.add('digitandoSom');
+    tecla.play({ seek: 2, volume: 0.1 });
+    const Human_audio = this.sound.add('Human_audio');
+    Human_audio.play({ volume: 1.2 });
 
     // Para parar após 1 segundo:
-    this.time.delayedCall(4000, () => {
-      som.stop();
+    this.time.delayedCall(4500, () => {
+      tecla.stop();
+      Human_audio.stop();
     });
 
     // Fundo tipo "cover"
@@ -59,7 +63,8 @@ export class CutsceneTwo extends Phaser.Scene {
 
     // Inicia a próxima cena (CutsceneThree) quando ENTER for pressionado
     this.input.keyboard.once('keydown-ENTER', () => {
-      som.stop();
+      tecla.stop();
+      Human_audio.stop();
       this.scene.start('CutsceneThree');
     });
 
@@ -124,8 +129,8 @@ export class CutsceneTwo extends Phaser.Scene {
     const textConfig = this.getTextConfig(width, height, isMobile, bubbleConfig);
 
     // Cria o objeto de texto dentro da bolha
-    this.messageText = this.add.text(textConfig.x, textConfig.y, '', {
-      font: `${textConfig.fontSize}px Arial, sans-serif`,
+     this.messageText = this.add.text(textConfig.x, textConfig.y, '', {
+      font: `${textConfig.fontSize + 2}px Pixelify Sans`,
       fill: '#000000',
       lineSpacing: textConfig.lineSpacing,
       wordWrap: {
