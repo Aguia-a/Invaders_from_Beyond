@@ -39,6 +39,26 @@
                 text-decoration: none;
                 color: inherit;
             }
+
+            #menu-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: #111;
+            color: white;
+            font-size: 26px;
+            font-family: 'Pixelify Sans', sans-serif;
+            border: 2px solid white;
+            border-radius: 5px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            }
+            #menu-button:hover {
+            background: #333;
+            }
+
         </style>
 
         <link rel="shortcut icon" href="assets/logo.png" type="image/x-icon">
@@ -50,5 +70,6 @@
         <div id="game-container"></div>
         <script src="./phaser.js"></script>
         <script type="module" src="./src/main.js"></script>
+        <button id="menu-button" style="display: none;">Menu</button>
     </body>
     </html>

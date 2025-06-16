@@ -53,10 +53,10 @@ export class CutsceneFour extends Phaser.Scene {
     this.currentIndex = 0;
     this.typeNextChar();
 
-    // Inicia a próxima cena (SelectShip) quando ENTER for pressionado
+    // Inicia a próxima cena (dicas) quando ENTER for pressionado
     this.input.keyboard.once('keydown-ENTER', () => {
       som.stop();
-      this.scene.start('SelectShip');
+      this.scene.start('TipsScene');
     });
 
     // Listener para redimensionamento da tela

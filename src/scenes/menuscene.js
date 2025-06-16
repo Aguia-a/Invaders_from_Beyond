@@ -1,6 +1,9 @@
 export function pauseSistem(currentScene, newScene) {
   currentScene.scene.pause(); // Pausa a cena atual (ex: GameScene)
   currentScene.scene.launch(`${newScene}`); // Inicia o menu por cima
+
+  const menuButton = document.getElementById('menu-button');
+  if (menuButton) menuButton.style.display = 'none';  // esconde o botão
 }
 
 export default class MenuScene extends Phaser.Scene {
@@ -12,7 +15,6 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('menuBackground', 'assets/menu-bg.png');
     this.load.image('btnResume', 'assets/btnResume.png');
     this.load.image('btnAudioOff', 'assets/btnAudioOnOff.png');
     this.load.image('btnRestart', 'assets/btnRestart.png');
@@ -102,6 +104,12 @@ export default class MenuScene extends Phaser.Scene {
   resumeGame() {
     this.scene.stop();
     this.scene.resume('Game');
+
+    const menuButton = document.getElementById('menu-button');
+    if (menuButton) menuButton.style.display = 'block'; // reexibe o botão
+
+    this.scene.stop(); // fecha o menu
+    this.scene.resume('Game'); // retoma o jogo
   }
 
   handleKeyInput(event) {

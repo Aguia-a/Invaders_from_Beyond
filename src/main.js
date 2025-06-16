@@ -8,6 +8,8 @@ import { CutsceneFour } from './scenes/cutsceneFour.js';
 import GameOverScene from './scenes/gameOver.js';
 import DemoEnd from './scenes/DemoEnd.js';
 import MenuScene from './scenes/menuscene.js';
+import { TipsScene } from './scenes/tips.js';
+
 
 
 const config = {
@@ -18,7 +20,7 @@ const config = {
     height: window.innerHeight,
     backgroundColor: '#000000',
     pixelArt: true,
-    scene: [Start, CutsceneOne, CutsceneTwo, CutsceneThree, CutsceneFour, SelectShip, Game, MenuScene, GameOverScene, DemoEnd],
+    scene: [Start, CutsceneOne, CutsceneTwo, CutsceneThree, CutsceneFour, TipsScene, SelectShip, Game, MenuScene, GameOverScene, DemoEnd],
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH

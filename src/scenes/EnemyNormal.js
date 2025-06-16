@@ -28,11 +28,15 @@ export class EnemyNormal extends Phaser.Physics.Arcade.Sprite {
     move() {
         this.x += this.speed;
 
-        if (this.x > 1200 || this.x < 80) {
+        const minX = 50;
+        const maxX = this.scene.scale.width - 50;
+
+        if (this.x > maxX || this.x < minX) {
             this.speed *= -1;
             this.y += 10;
         }
     }
+
 
     // Decide se irá atirar, e qual tipo de ataque chamar
     tryToShoot(player) {
