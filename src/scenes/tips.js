@@ -72,7 +72,7 @@ export class TipsScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Avança para SelectShip ao clicar
-        this.input.once('pointerdown', () => {
+        this.input.keyboard.once('keydown-ENTER', () => {
             this.scene.start('SelectShip');
         });
     }
