@@ -74,7 +74,6 @@ export class Game extends Phaser.Scene {
         setupBackgroundSystem(this);
 
         this.player = new Player(this, this.scale.width / 2, 700, selectedShip);
-
         this.firePlayer = new FirePlayer(this, this.player.sprite);
 
         this.game.inGameMusic = this.sound.add('bgSound', { loop: true, volume: 0.3 });
@@ -82,13 +81,11 @@ export class Game extends Phaser.Scene {
 
         this.hitSound = this.sound.add("hitSound");
         this.hitSoundEnemy = this.sound.add("hitSoundEnemy", { volume: 3 });
-
-        this.bossRoar = this.sound.add('bossRoar', { volume: 0.9 })
-        this.bossMainRoar = this.sound.add('bossMainRoar')
-        this.shootBoss = this.sound.add('shootBoss', { volume: 0.8 })
-        this.shootBoss02 = this.sound.add('shootBoss02', { volume: 0.8 })
-        this.bossTeleport = this.sound.add('bossTeleport',  { volume: 1.5 })
-        
+        this.bossRoar = this.sound.add('bossRoar', { volume: 0.9 });
+        this.bossMainRoar = this.sound.add('bossMainRoar');
+        this.shootBoss = this.sound.add('shootBoss', { volume: 0.8 });
+        this.shootBoss02 = this.sound.add('shootBoss02', { volume: 0.8 });
+        this.bossTeleport = this.sound.add('bossTeleport', { volume: 1.5 });
 
         this.normalEnemies = this.physics.add.group();
         this.enemyBullets = this.physics.add.group();
@@ -96,17 +93,31 @@ export class Game extends Phaser.Scene {
         this.level = 1;
         this.enemyDirection = 3;
 
+        // ✅ Só declare uma vez
+        const menuButton = document.getElementById('menu-button');
+        if (menuButton) {
+            menuButton.style.display = 'block';
+            menuButton.onclick = () => {
+                pauseSistem(this, 'menuscene');
+            };
+        }
+
+        this.events.on('shutdown', () => {
+            if (menuButton) {
+                menuButton.style.display = 'none';
+                menuButton.onclick = null;
+            }
+        });
+
         this.levelText = this.add.text(0, 0, 'Nível: 1', {
             fontSize: '28px',
             fill: '#fff'
         }).setScrollFactor(0);
 
         this.updateLevelTextPosition();
-
         this.scale.on('resize', this.updateLevelTextPosition, this);
 
         this.boss = null;
-
         this.createEnemiesForLevel(this.level);
 
         this.anims.create({
@@ -123,6 +134,7 @@ export class Game extends Phaser.Scene {
             repeat: -1
         });
     }
+
 
     createEnemiesForLevel(level) {
     //Se o level for 11, chama o DemoEnd
